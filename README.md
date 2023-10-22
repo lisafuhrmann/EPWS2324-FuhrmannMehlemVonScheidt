@@ -23,3 +23,9 @@ Es ist noch unklar, ob die Anwendung hauptsächlich auf Smartphones oder auch au
 Die Relevanz für das Projekt besteht hauptsächlich auf der gesellschaftlichen Ebene. Es macht die lokale Geschichte und Kultur unterhaltsamer und leichter zugänglich. Besucher können spielerisch lernen und sich mit der Region auseinandersetzen. <br>
 Der neue "ARlebnispfad" wird Auswirkungen auf den lokalen Tourismus haben und die Ermöglichung des Erlebens als Gruppe auf diesen einen positiven Einfluss haben.<br>
 Wir erforschen innovative Technologien und ihre Anwendung in Bildung und Tourismus. Dieses Projekt könnte als Fallstudie für AR und soziale Interaktionen dienen.
+
+## Domäne
+
+Ein erster Entwurf, wie sich die Anwendung in die Domäne einfügen könnte:
+
+![Domänenmodell](/Artefakte/Domaenenanalyse_v1.0.jpg)
