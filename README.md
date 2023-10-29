@@ -8,6 +8,7 @@ Im Projekt “ARlebnispfade Oberberg” steht die Implementierung von Augmented 
 Außerdem soll es Nutzern ermöglicht werden, Medien gleichzeitig als Gruppe zu erleben. Durch ein synchrones Wiedergeben der Medien sollen diese nicht nur gemeinsam erlebbar werden, sondern auch Probleme, wie eine mehrfache Wiedergabe mit Versatz und dadurch entstehende Unverständlichkeiten, vermieden werden.
 
 ### Zielsetzung / Vision:
+
 Das Ziel besteht darin, eine Anwendung zu entwickeln, die Besuchern die Kultur und Geschichte des Oberbergs vermittelt und dabei unterhaltsam bleibt. Die Vision ist, ein gemeinsames Lernerlebnis zu schaffen, das Bildung und Spaß verbindet. Es wird eine Browseranwendung entwickelt, die die synchronisierte Wiedergabe von Medien über verschiedene Endgeräte hinweg ermöglicht. Die Synchronisation erfolgt einfach, anonym und ad hoc, ohne auf eine zentrale Unit (Server) zugreifen zu müssen. Dabei wird auch das Konzept für die Erstellung und Verwaltung einer Gruppe erarbeitet.
 
 ### Projektumsetzung:
@@ -25,6 +26,8 @@ Die gesellschaftliche Relevanz liegt in der Bereicherung der lokalen Geschichte 
 
 ## Domäne
 
-Ein erster Entwurf, wie sich die Anwendung in die Domäne einfügen könnte:
-
+### Präskriptives Domänenmodell
 ![Domänenmodell](/Artefakte/Domaenenanalyse_v1.0.jpg)
+
+### Deskriptives Domänenmodell
+![Deskriptives Domänenmodell](/Artefakte/Deskriptives%20Dom%C3%A4nenmodell.jpg)
