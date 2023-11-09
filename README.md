@@ -43,4 +43,4 @@ Die gesellschaftliche Relevanz liegt in der Bereicherung der lokalen Geschichte 
 * Folien
 
 ## Präsentation für das 1. Audit
-Hier findet ihr unsere Präsentation für das 1. Audit: [PDF](/Audits/Audit%201.2.pdf)
+Hier findet ihr unsere Präsentation für das 1. Audit: [PDF](/Audits/Audit1.pdf)
