@@ -41,3 +41,6 @@ Die gesellschaftliche Relevanz liegt in der Bereicherung der lokalen Geschichte 
 * Anforderungen und Risiken
 * Spezifikationen PoC
 * Folien
+
+## Präsentation für das 1. Audit
+Hier findet ihr unsere Präsentation für das 1. Audit: [PDF](/Audits/Audit%201.2.pdf)
