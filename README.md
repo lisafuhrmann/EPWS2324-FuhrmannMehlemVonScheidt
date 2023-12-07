@@ -28,10 +28,10 @@ Die gesellschaftliche Relevanz liegt in der Bereicherung der lokalen Geschichte 
 ## Domäne
 
 ### Deskriptives Domänenmodell
-![Deskriptives Domänenmodell](/Artefakte/Domaenenmodell_deskriptiv_v02.jpg)
+![Deskriptives Domänenmodell](/Artefakte/Domaenenmodell_deskriptiv_v2.0.jpg)
 
 ### Präskriptives Domänenmodell
-![Domänenmodell](/Artefakte/Domaenenemodell_praeskriptiv_v02.jpg)
+![Domänenmodell](/Artefakte/Domaenenemodell_praeskriptiv_v2.0.jpg)
 
 #### Weitere Artefakte & Themen für Audit 1
 
