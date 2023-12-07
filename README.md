@@ -33,15 +33,16 @@ Die gesellschaftliche Relevanz liegt in der Bereicherung der lokalen Geschichte 
 ### Präskriptives Domänenmodell
 ![Domänenmodell](/Artefakte/Domaenenemodell_praeskriptiv_v2.0.jpg)
 
-#### Weitere Artefakte & Themen für Audit 1
+## Präsentation für das 2. Audit
+Hier findet ihr unsere Präsentation für das 2. Audit: [PDF](/Audits/Audit2.pdf)
 
-* Zielsetzungen und Vorgehen
-* Abwägung von Methoden
-* iterierte Domänenmodelle
-* Zielhierchie & Projektplan
-* Anforderungen und Risiken
-* Spezifikationen PoC
-* Folien
+#### Weitere Artefakte & Themen für Audit 3
 
-## Präsentation für das 1. Audit
-Hier findet ihr unsere Präsentation für das 1. Audit: [PDF](/Audits/Audit1.pdf)
+* Iterierte Versionen bestehender Artefakte
+* Auswahl der Webdienste / Technologien
+* durchgeführte PoCs
+* Modellierung der Anwendungslogik (Stichworte: Bezug zu Problemszenario, synchron / asynchron, Protokolle, ...)
+* Architekturdiagramm
+* Erste Version einer Bewertungsmatrix
+* erste Rapid Prototypes
+* ggf. erster Ansatz eines Kommunikationsmodells
