@@ -9,7 +9,8 @@ Außerdem soll es Nutzern ermöglicht werden, Medien gleichzeitig als Gruppe zu 
 
 ### Zielsetzung / Vision
 
-Das Ziel besteht darin, eine Anwendung zu entwickeln, die Besuchern die Kultur und Geschichte des Oberbergs vermittelt und dabei unterhaltsam bleibt. Die Vision ist, ein gemeinsames Lernerlebnis zu schaffen, das Bildung und Spaß verbindet. Es wird eine Browseranwendung entwickelt, die die synchronisierte Wiedergabe von Medien über verschiedene Endgeräte hinweg ermöglicht. Die Synchronisation erfolgt einfach, anonym und ad hoc, ohne auf eine zentrale Unit (Server) zugreifen zu müssen. Dabei wird auch das Konzept für die Erstellung und Verwaltung einer Gruppe erarbeitet.
+Das Ziel besteht darin Prototypen für eine Anwendung zu entwickeln, die Besuchern die Kultur und Geschichte des Oberbergs vermittelt und dabei unterhaltsam bleibt. Dabei sollen verschiedene Synchronisierungsmethoden miteinander verglichen und bewertet werden. Für die Prototypen gilt es eine Matrix zu entwickeln, die einen Vergleich und das Bewerten ermöglicht.
+Die Vision ist, ein gemeinsames Lernerlebnis zu schaffen, das Bildung und Spaß verbindet. Es soll eine synchronisierte Wiedergabe von Medien über verschiedene Endgeräte hinweg ermöglicht werden. Die Synchronisation erfolgt einfach, anonym und ad hoc, ohne auf eine zentrale Unit (Server) zugreifen zu müssen. Dabei wird auch das konzept für die Erstellung und Verwaltung einer Gruppe erarbeitet.
 
 ### Projektumsetzung
 
