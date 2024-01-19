@@ -42,15 +42,14 @@ Eine bessere Übersicht kann man auch [hier](https://miro.com/app/board/uXjVNaGB
 
 ## Präsentation für das 2. Audit
 
-Hier findet ihr unsere Präsentation für das 2. Audit: [PDF](/Audits/Audit2.pdf)
+Hier findet ihr unsere Präsentation für das 2. Audit: [PDF](/Audits/Audit3.pdf)
 
-#### Weitere Artefakte & Themen für Audit 3
+#### Weitere Artefakte & Themen für Audit 4
 
-- Iterierte Versionen bestehender Artefakte
-- Auswahl der Webdienste / Technologien
-- durchgeführte PoCs
-- Modellierung der Anwendungslogik (Stichworte: Bezug zu Problemszenario, synchron / asynchron, Protokolle, ...)
-- Architekturdiagramm
-- Erste Version einer Bewertungsmatrix
-- erste Rapid Prototypes
-- ggf. erster Ansatz eines Kommunikationsmodells
+- Iterierte Versionen bestehender Artefakte​
+- Erweiterung der Webdienste/Technologien
+- durchgeführte PoCs​
+- Ausgefüllte Bewertungsmatrizen und Fazit
+- Main Prototypes
+- Gesamtfazit und Prozessassessment zum Projekt
+- Posters
