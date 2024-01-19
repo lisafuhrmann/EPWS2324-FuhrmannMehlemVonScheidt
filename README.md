@@ -37,7 +37,7 @@ Die gesellschaftliche Relevanz liegt in der Bereicherung der lokalen Geschichte 
 ## Proof of Concept
 
 Für das Projekt wurden umfangreiche Proof of Concepts ausgearbeitet:
-![Proof of Concepts](/Artefakte/PoCs_v2.0.jpg)
+![Proof of Concepts](/Artefakte/PoCs_v3.0.png)
 Eine bessere Übersicht kann man auch [hier](https://miro.com/app/board/uXjVNaGBWvU=/?moveToWidget=3458764573606242183&cot=14) gewinnen.
 
 ## Präsentation für das 3. Audit
