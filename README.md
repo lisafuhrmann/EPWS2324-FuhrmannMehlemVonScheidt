@@ -40,6 +40,10 @@ Für das Projekt wurden umfangreiche Proof of Concepts ausgearbeitet:
 ![Proof of Concepts](/Artefakte/PoCs_v3.0.png)
 Eine bessere Übersicht kann man auch [hier](https://miro.com/app/board/uXjVNaGBWvU=/?moveToWidget=3458764573606242183&cot=14) gewinnen.
 
+## Hier findet ihr eine Dokumentation des aktuellen Entwicklungsstandes
+
+[Development Dokumentation](https://little-cashew-cf8.notion.site/Development-Dokumentation-30b439ae92bc4f7cb817bca335e9f40c)
+
 ## Präsentation für das 3. Audit
 
 Hier findet ihr unsere Präsentation für das 3. Audit: [PDF](/Audits/Audit3.pdf)
@@ -52,4 +56,4 @@ Hier findet ihr unsere Präsentation für das 3. Audit: [PDF](/Audits/Audit3.pdf
 - Ausgefüllte Bewertungsmatrizen und Fazit
 - Main Prototypes
 - Gesamtfazit und Prozessassessment zum Projekt
-- Posters
+- Poster
