@@ -1,0 +1,19 @@
+{
+  "name": "tunneling-ansatz",
+  "version": "0.1.0",
+  "description": "Prototyp fuer den Tunneling Ansatz",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Niklas Mehlem",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "localtunnel": "^2.0.2",
+    "path": "^0.12.7"
+  }
+}

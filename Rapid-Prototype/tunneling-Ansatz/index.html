@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script>
+        const cacheServiceEndpoint = "https://ripe-mangos-super-smell.loca.lt/"
+
+        const allowedHeader = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, PUT, GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
+        }
+
+        let sessionKey;
+        const sessionRefreshIntervalDuration = 10000
+        let sessionContextFreshInterval
+        let inSession = false
+        let messages = []
+
+        const startSession = async () => {
+            document.getElementById("sessionKey").innerText = ""
+            const response = fetch(cacheServiceEndpoint,
+                {
+                    "method": "POST",
+                    "mode": "cors"
+                }
+            )
+            response.then(data => data.json()).then((json) => {
+                console.log(json)
+                sessionKey = JSON.stringify(json.body.sessionKey)
+                console.log("new session initialized with key " + sessionKey)
+                joinSession(sessionKey)
+                pushSessionContext({ messages: messages })
+            });
+        }
+
+        const joinSession = async (sessionToJoinKey = sessionKey) => {
+            sessionKey = sessionToJoinKey
+            document.getElementById("sessionKey").innerText = sessionKey
+            sessionContextFreshInterval = setInterval(() => retrieveSessionContext(), sessionRefreshIntervalDuration)
+            inSession = true
+        }
+
+        const retrieveSessionContext = async () => {
+            const requestOptions = {
+                "method": "GET",
+                "mode": "cors",
+                "redirect": "follow"
+            };
+
+            fetch(cacheServiceEndpoint + "?sessionKey=" + sessionKey, requestOptions)
+                .then(response => response.json())
+                .then(result => processSessionContext(result))
+                .catch(error => console.log('error', error));
+        }
+
+        const pushSessionContext = async (sessionContext) => {
+
+            const requestOptions = {
+                headers: { "Content-Type": "application/json" },
+                method: "PUT",
+                mode: "cors",
+                redirect: "follow",
+                body: JSON.stringify({ value: sessionContext }),
+            };
+            console.log("PUT Request: " + requestOptions)
+
+            fetch(cacheServiceEndpoint + "?sessionKey=" + sessionKey, requestOptions)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(result => console.log("Result of session context push: " + JSON.stringify(result.body)))
+                .catch(error => console.log('error', error));
+        }
+
+        const processSessionContext = (sessionContext) => {
+            const messagesTextarea = document.getElementById("messages")
+            console.log("Das hab ich bekommen: " + JSON.stringify(sessionContext))
+            console.log("Das sagen die Leute: " + sessionContext.body.value)
+            messages = sessionContext.body.value.messages
+            const messageContent = messages.reduce((sum, message, index) => sum + (index > 0 ?"\n":"") + message,"")
+            messagesTextarea.value = messageContent
+        }
+
+        window.onload = function () {
+            function initializePage() {
+                document.getElementById("startSession").addEventListener("click", () => { startSession() })
+                document.getElementById("joinSession").addEventListener("click", () => {
+                    const joinSessionKey = document.getElementById("joinSessionKey").value
+                    joinSession(joinSessionKey)
+                })
+                document.getElementById("sendMessage").addEventListener("click", () => {
+                    const message = document.getElementById("message").value
+                    messages.push(message)
+                    pushSessionContext({ messages: messages })
+                })
+            }
+
+            initializePage();
+        }
+    </script>
+</head>
+
+<body>
+    <label for="joinSessionKey">Session Key for Session To Join</label>
+    <input id="joinSessionKey"></input>
+    <input type="button" id="joinSession" value="Join Existing Multi Client Session" />
+    <input type="button" id="startSession" value="Start Multi Client Session" />
+    <h3>Multi Client Session Identifier <p id="sessionKey"></p>
+    </h3>
+    <hr />
+    <label for="message">Message to Send</label>
+    <input id="message" />
+    <input type="button" id="sendMessage" value="Send Message" />
+    <br />
+    <textarea id="messages" rows="10" columns="80"></textarea>
+</body>
+
+</html>
