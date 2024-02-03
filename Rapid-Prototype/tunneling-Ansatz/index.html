@@ -1,3 +1,4 @@
+<!-- Ursprungscode und Konzept von: https://technology.amis.nl/cloud/implementing-serverless-multi-client-session-synchronization-with-oracle-cloud-infrastructure/ -->
 <!DOCTYPE html>
 <html>
 
@@ -5,14 +6,10 @@
     <script>
         const cacheServiceEndpoint = "https://ripe-mangos-super-smell.loca.lt/"
 
-        const allowedHeader = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, PUT, GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-        }
-
         let sessionKey;
-        const sessionRefreshIntervalDuration = 10000
+        let member;
+        let print;
+        const sessionRefreshIntervalDuration = 4000
         let sessionContextFreshInterval
         let inSession = false
         let messages = []
@@ -22,21 +19,35 @@
             const response = fetch(cacheServiceEndpoint,
                 {
                     "method": "POST",
-                    "mode": "cors"
+                    "mode": "cors",
                 }
             )
             response.then(data => data.json()).then((json) => {
                 console.log(json)
                 sessionKey = JSON.stringify(json.body.sessionKey)
                 console.log("new session initialized with key " + sessionKey)
+                messages.length = 0;
                 joinSession(sessionKey)
                 pushSessionContext({ messages: messages })
             });
         }
 
-        const joinSession = async (sessionToJoinKey = sessionKey) => {
+        const joinSession = async (sessionToJoinKey /*= sessionKey*/) => {
+            member = document.getElementById("memberName").value
             sessionKey = sessionToJoinKey
             document.getElementById("sessionKey").innerText = sessionKey
+            messages.length = 0;
+
+            print = Math.random().toString(36).substring(7) + '';
+            console.log("Das ist dein Print: " + print);
+            const requestOptions = {
+                headers: { "Content-Type": "application/json" },
+                method: "POST",
+                mode: "cors",
+                body: JSON.stringify({ fingerprint: print }),
+            };
+            fetch(cacheServiceEndpoint + "member" + "?sessionKey=" + sessionKey + "&member=" + member, requestOptions)
+
             sessionContextFreshInterval = setInterval(() => retrieveSessionContext(), sessionRefreshIntervalDuration)
             inSession = true
         }
@@ -78,11 +89,16 @@
 
         const processSessionContext = (sessionContext) => {
             const messagesTextarea = document.getElementById("messages")
+            const memberTextarea = document.getElementById("members")
             console.log("Das hab ich bekommen: " + JSON.stringify(sessionContext))
             console.log("Das sagen die Leute: " + sessionContext.body.value)
+            console.log("Das sind die Meber: " + sessionContext.memberBody.value)
             messages = sessionContext.body.value.messages
-            const messageContent = messages.reduce((sum, message, index) => sum + (index > 0 ?"\n":"") + message,"")
+            members = sessionContext.memberBody.value
+            const messageContent = messages.reduce((sum, message, index) => sum + (index > 0 ? "\n" : "") + message, "")
+            const memberContent = members.reduce((sum, member, index) => sum + (index > 0 ? "\n" : "") + member, "")
             messagesTextarea.value = messageContent
+            memberTextarea.value = memberContent
         }
 
         window.onload = function () {
@@ -107,6 +123,8 @@
 <body>
     <label for="joinSessionKey">Session Key for Session To Join</label>
     <input id="joinSessionKey"></input>
+    <label for="memberName">Name für die Session</label>
+    <input id="memberName"></input>
     <input type="button" id="joinSession" value="Join Existing Multi Client Session" />
     <input type="button" id="startSession" value="Start Multi Client Session" />
     <h3>Multi Client Session Identifier <p id="sessionKey"></p>
@@ -117,6 +135,7 @@
     <input type="button" id="sendMessage" value="Send Message" />
     <br />
     <textarea id="messages" rows="10" columns="80"></textarea>
+    <textarea id="members" rows="10" columns="80"></textarea>
 </body>
 
 </html>

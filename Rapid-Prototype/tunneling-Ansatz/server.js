@@ -1,11 +1,19 @@
 // Ursprungscode und Konzept von: https://technology.amis.nl/cloud/implementing-serverless-multi-client-session-synchronization-with-oracle-cloud-infrastructure/
 const cache = require('./live-cache.js');
-
+const memberCache = require('./member-cache.js');
+//const fingerprint2js = require('./custom_modules/fingerprint2.js');
+/*
+const options = { excludeJsFonts: false, swfPath: '/swf/FontList.swf' };
+const fingerPrint2 = new fingerprint2js.Fingerprint2(options);
+*/
 const express = require('express');
 const localtunnel = require('localtunnel');
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+//const fingerprintJs = require('@fingerprintjs/fingerprintjs');
+//const { get } = require('@fingerprintjs/fingerprintjs').load();
+//const fingerprintJs = require('fingerprintjs2');
 
 const app = express();
 const port = 3000;
@@ -21,6 +29,7 @@ console.log("Root Path: " + rootPath)
 
 app.use(cors());
 app.use(bodyParser.json());
+//app.use('/custom_modules', express.static(path.join(__dirname, 'custom_modules')));
 
 // Set up localtunnel
 const subdomain = 'ripe-mangos-super-smell';
@@ -39,13 +48,15 @@ app.get('/', (req, res) => {
     if (!sessionKey || sessionKey.trim() === '') {
         res.redirect('index.html');
     } else {
-        console.log("Deine Mudda war hier")
-        result = cache.readFromCache(sessionKey)
+        //console.log("Deine Mudda war hier")
+        result = cache.readFromCache(sessionKey);
+        member = memberCache.readFromCache(sessionKey);
         console.log("Result: " + JSON.stringify(result))
         res.set(allowedHeader);
 
         res.status(200).send({
             body: result,
+            memberBody: member,
             mode: "cors"
         });
     }
@@ -82,6 +93,24 @@ app.options('/', (req, res) => {
     res.set(allowedHeader);
     res.status(200).send();
 })
+
+app.post('/member', async (req, res) => {
+    try {
+        const sessionKey = req.query.sessionKey;
+        const member = req.query.member;
+        const print = req.body;
+        
+        console.log("Die VisitorId: " + JSON.stringify(print.fingerprint))
+        result = memberCache.writeToCache(sessionKey, print.fingerprint, member);
+        console.log("Result: " + JSON.stringify(result));
+
+        res.set(allowedHeader);
+        res.status(200).send();
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
 
 //Homepage route
 app.get("/index.html", function (req, res) { //root dir
