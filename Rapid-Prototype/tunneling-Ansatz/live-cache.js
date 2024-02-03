@@ -7,8 +7,6 @@ const readFromCache = (cacheKey) => {
         let nor = cache['_numberOfReads'] + 1
         cache['_numberOfReads'] = nor
         const value = cache[cacheKey] != null ? cache[cacheKey].value : { "Soose": "Ganz viel Soose" }
-        //console.log("Cache state: " + JSON.stringify(cache));
-        //console.log("Cache key:", cacheKey);
         console.log("Deine Vater war hier und: " + JSON.stringify(value))
         return { "value": value }
     } catch (error) {

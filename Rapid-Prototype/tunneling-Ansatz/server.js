@@ -1,19 +1,11 @@
 // Ursprungscode und Konzept von: https://technology.amis.nl/cloud/implementing-serverless-multi-client-session-synchronization-with-oracle-cloud-infrastructure/
 const cache = require('./live-cache.js');
 const memberCache = require('./member-cache.js');
-//const fingerprint2js = require('./custom_modules/fingerprint2.js');
-/*
-const options = { excludeJsFonts: false, swfPath: '/swf/FontList.swf' };
-const fingerPrint2 = new fingerprint2js.Fingerprint2(options);
-*/
 const express = require('express');
 const localtunnel = require('localtunnel');
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-//const fingerprintJs = require('@fingerprintjs/fingerprintjs');
-//const { get } = require('@fingerprintjs/fingerprintjs').load();
-//const fingerprintJs = require('fingerprintjs2');
 
 const app = express();
 const port = 3000;
@@ -29,7 +21,6 @@ console.log("Root Path: " + rootPath)
 
 app.use(cors());
 app.use(bodyParser.json());
-//app.use('/custom_modules', express.static(path.join(__dirname, 'custom_modules')));
 
 // Set up localtunnel
 const subdomain = 'ripe-mangos-super-smell';
