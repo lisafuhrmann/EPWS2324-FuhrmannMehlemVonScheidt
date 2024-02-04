@@ -8,7 +8,8 @@
 
         let sessionKey;
         let member;
-        let print;
+        let print = Math.random().toString(36).substring(7) + '';
+        console.log("Das ist dein Print: " + print);
         const sessionRefreshIntervalDuration = 4000
         let sessionContextFreshInterval
         let inSession = false
@@ -19,7 +20,7 @@
             const response = fetch(cacheServiceEndpoint,
                 {
                     "method": "POST",
-                    "mode": "cors"
+                    "mode": "cors",
                 }
             )
             response.then(data => data.json()).then((json) => {
@@ -38,8 +39,10 @@
             document.getElementById("sessionKey").innerText = sessionKey
             messages.length = 0;
 
+            /*
             print = Math.random().toString(36).substring(7) + '';
             console.log("Das ist dein Print: " + print);
+            */
             const requestOptions = {
                 headers: { "Content-Type": "application/json" },
                 method: "POST",
@@ -87,6 +90,21 @@
                 .catch(error => console.log('error', error));
         }
 
+        const deleteSession = async () => {
+            const requestOptions = {
+                "method": "DELETE",
+                "mode": "cors",
+                "redirect": "follow"
+            };
+
+            fetch(cacheServiceEndpoint + "?sessionKey=" + sessionKey + "&print=" + print, requestOptions)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.statusText);
+                    }
+                })
+        }
+
         const processSessionContext = (sessionContext) => {
             const messagesTextarea = document.getElementById("messages")
             const memberTextarea = document.getElementById("members")
@@ -113,6 +131,7 @@
                     messages.push(message)
                     pushSessionContext({ messages: messages })
                 })
+                document.getElementById("deleteSession").addEventListener("click", () => { deleteSession() })
             }
 
             initializePage();
@@ -127,6 +146,7 @@
     <input id="memberName"></input>
     <input type="button" id="joinSession" value="Join Existing Multi Client Session" />
     <input type="button" id="startSession" value="Start Multi Client Session" />
+    <input type="button" id="deleteSession" value="Delete current Session" />
     <h3>Multi Client Session Identifier <p id="sessionKey"></p>
     </h3>
     <hr />

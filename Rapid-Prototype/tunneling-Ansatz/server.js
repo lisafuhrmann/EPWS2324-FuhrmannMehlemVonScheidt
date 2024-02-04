@@ -78,6 +78,18 @@ app.put('/', (req, res) => {
     });
 });
 
+app.delete('/', (req, res) => {
+    const sessionKey = req.query.sessionKey;
+    const print = req.query.print;
+
+    result = cache.deleteSession(sessionKey)
+    memberResult = memberCache.deleteSession(sessionKey)
+    console.log("Result von Cache delte: " + JSON.stringify(result) + " und Member Cache: " + JSON.stringify(memberResult))
+    res.set(allowedHeader);
+
+    res.status(200).send();
+});
+
 app.options('/', (req, res) => {
     console.log("Das Kitzelt");
 

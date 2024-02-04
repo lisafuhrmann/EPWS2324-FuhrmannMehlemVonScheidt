@@ -6,7 +6,7 @@ const readFromCache = (cacheKey) => {
     try {
         let nor = cache['_numberOfReads'] + 1
         cache['_numberOfReads'] = nor
-        const value = cache[cacheKey] != null ? cache[cacheKey].value : { "Soose": "Ganz viel Soose" }
+        const value = cache[cacheKey] != null ? cache[cacheKey].value : { "messages": ["Diese Gruppe existiert nicht (mehr)!"] }
         console.log("Deine Vater war hier und: " + JSON.stringify(value))
         return { "value": value }
     } catch (error) {
@@ -32,10 +32,27 @@ const startNewSession = () => {
     return { sessionKey: sessionKey }
 }
 
+const deleteSession = (cacheKey) => {
+    try {
+        if (cache[cacheKey]) {
+            delete cache[cacheKey];
+            console.log(`Session with key ${cacheKey} has been deleted.`);
+            console.log("success true")
+            return { success: true };
+        } else {
+            console.log(`Session with key ${cacheKey} not found.`);
+            console.log("Error No Session found.")
+            return { success: false, error: "Session not found." };
+        }
+    } catch (error) {
+        console.error("Error in deleteSession:", error);
+        return { success: false, error: "Internal Server Error" };
+    }
+}
 
 module.exports = {
     readFromCache: readFromCache,
     writeToCache: writeToCache,
-    startNewSession: startNewSession
-
+    startNewSession: startNewSession,
+    deleteSession: deleteSession,
 }
