@@ -37,7 +37,6 @@ const startNewSession = () => {
     cache[sessionKey] = { value: {}, timestamp: Date.now(), version: 0 }
     return { sessionKey: sessionKey }
 }
-
 // löscht eine Session aus dem Cache
 const deleteSession = (cacheKey) => {
     try {
