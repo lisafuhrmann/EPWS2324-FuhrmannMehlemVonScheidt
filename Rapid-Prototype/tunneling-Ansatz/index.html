@@ -1,4 +1,7 @@
-<!-- Ursprungscode und Konzept von: https://technology.amis.nl/cloud/implementing-serverless-multi-client-session-synchronization-with-oracle-cloud-infrastructure/ -->
+<!-- Grundcode und Konzept von: https://technology.amis.nl/cloud/implementing-serverless-multi-client-session-synchronization-with-oracle-cloud-infrastructure/
+* Author: Lucas Jellema
+* GitHub: https://github.com/lucasjellema/live-cache/blob/main/index.html 
+-->
 <!DOCTYPE html>
 <html>
 
@@ -15,6 +18,8 @@
         let inSession = false
         let messages = []
 
+        // Funktion von Lucas Jellema
+        // macht eine Post Request um eine neue Session zu starten
         const startSession = async () => {
             document.getElementById("sessionKey").innerText = ""
             const response = fetch(cacheServiceEndpoint,
@@ -33,16 +38,14 @@
             });
         }
 
-        const joinSession = async (sessionToJoinKey /*= sessionKey*/) => {
+        // Urfunktion von Lucas Jellema
+        // tritt einer Session bei und macht eine Post Request um sich als Memeber der Grupper der Session hinzuzufügen
+        const joinSession = async (sessionToJoinKey) => {
             member = document.getElementById("memberName").value
             sessionKey = sessionToJoinKey
             document.getElementById("sessionKey").innerText = sessionKey
             messages.length = 0;
 
-            /*
-            print = Math.random().toString(36).substring(7) + '';
-            console.log("Das ist dein Print: " + print);
-            */
             const requestOptions = {
                 headers: { "Content-Type": "application/json" },
                 method: "POST",
@@ -55,6 +58,8 @@
             inSession = true
         }
 
+        // Funktion von Lucas Jellema
+        // Macht eine Get Request um die Daten der Session zu erhalten
         const retrieveSessionContext = async () => {
             const requestOptions = {
                 "method": "GET",
@@ -68,6 +73,8 @@
                 .catch(error => console.log('error', error));
         }
 
+        // Funktion von Lucas Jellema
+        // Macht eine Put Request um die Daten der Session zu updaten
         const pushSessionContext = async (sessionContext) => {
 
             const requestOptions = {
@@ -90,6 +97,7 @@
                 .catch(error => console.log('error', error));
         }
 
+        // Macht eine Put Request um die Daten der Session zu updaten
         const deleteSession = async () => {
             const requestOptions = {
                 "method": "DELETE",
@@ -105,6 +113,8 @@
                 })
         }
 
+        // Funktion von Lucas Jellema
+        // Verarbeitet die erhaltenen Daten der Session (hier um sie anzuzeigen)
         const processSessionContext = (sessionContext) => {
             const messagesTextarea = document.getElementById("messages")
             const memberTextarea = document.getElementById("members")
@@ -119,6 +129,7 @@
             memberTextarea.value = memberContent
         }
 
+        // Funktion von Lucas Jellema
         window.onload = function () {
             function initializePage() {
                 document.getElementById("startSession").addEventListener("click", () => { startSession() })

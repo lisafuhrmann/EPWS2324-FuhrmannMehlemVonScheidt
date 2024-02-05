@@ -1,4 +1,4 @@
-// Ursprungscode und Konzept von: https://technology.amis.nl/cloud/implementing-serverless-multi-client-session-synchronization-with-oracle-cloud-infrastructure/
+/* Konzept von: https://technology.amis.nl/cloud/implementing-serverless-multi-client-session-synchronization-with-oracle-cloud-infrastructure/ */
 const cache = require('./live-cache.js');
 const memberCache = require('./member-cache.js');
 const express = require('express');

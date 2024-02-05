@@ -1,7 +1,11 @@
-// Code und Konzept von: https://technology.amis.nl/cloud/implementing-serverless-multi-client-session-synchronization-with-oracle-cloud-infrastructure/
+/* Grundcode und Konzept von: https://technology.amis.nl/cloud/implementing-serverless-multi-client-session-synchronization-with-oracle-cloud-infrastructure/
+* Author: Lucas Jellema
+* GitHub: https://github.com/lucasjellema/live-cache/blob/main/live-cache.js
+*/
 const cache = { "_cacheCreationTime": new Date(), "_numberOfReads": 0, "_numberOfWrites": 0 }
 
-// liest Werte aus dem Cache aus und gibt sie aus
+// Funktion von Lucas Jellema
+// liest Werte aus einer Session dem Cache aus und gibt sie aus
 const readFromCache = (cacheKey) => {
     try {
         let nor = cache['_numberOfReads'] + 1
@@ -15,6 +19,7 @@ const readFromCache = (cacheKey) => {
     }
 }
 
+// Funktion von Lucas Jellema
 // schreibt Werte in den Cache und gibt einen timestamp und Versionsnummer
 const writeToCache = (cacheKey, value) => {
     let numberOfWrites = cache['_numberOfWrites'] + 1
@@ -24,6 +29,7 @@ const writeToCache = (cacheKey, value) => {
     return { timestamp: cache[cacheKey].timestamp, version: cache[cacheKey].version }
 }
 
+// Funktion von Lucas Jellema
 // generiert einen neuen key und gibt diesen aus
 const startNewSession = () => {
     const keyPrefixes = ["funny", "happy", "silly", "cute", "lucky", "pretty", "crazy", "outrageous"]
@@ -32,6 +38,7 @@ const startNewSession = () => {
     return { sessionKey: sessionKey }
 }
 
+// löscht eine Session aus dem Cache
 const deleteSession = (cacheKey) => {
     try {
         if (cache[cacheKey]) {

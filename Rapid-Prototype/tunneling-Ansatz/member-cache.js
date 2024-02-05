@@ -1,16 +1,17 @@
-// Code und Konzept von: https://technology.amis.nl/cloud/implementing-serverless-multi-client-session-synchronization-with-oracle-cloud-infrastructure/
+/* Grundcode und Konzept von: https://technology.amis.nl/cloud/implementing-serverless-multi-client-session-synchronization-with-oracle-cloud-infrastructure/
+* Author: Lucas Jellema
+* GitHub: https://github.com/lucasjellema/live-cache/blob/main/live-cache.js
+*/
 const cache = { "_cacheCreationTime": new Date(), "_numberOfReads": 0, "_numberOfWrites": 0 }
-//const prints = []
-//const members = []
 
-// liest Werte aus dem Cache aus und gibt sie aus
+// Funktion von Lucas Jellema
+// liest MemberNamen einer Session aus dem Cache aus und gibt sie aus
 const readFromCache = (cacheKey) => {
     try {
         let nor = cache['_numberOfReads'] + 1
         cache['_numberOfReads'] = nor
         const value = cache[cacheKey] != null ? cache[cacheKey].memberPrint.memberName : ["Diese Gruppe existiert nicht (mehr)!"]
         console.log("MemberCache state: " + JSON.stringify(cache));
-        //console.log("Cache key:", cacheKey);
         console.log("Dein Großvater war hier und hieß: " + JSON.stringify(value))
         return { "value": value }
     } catch (error) {
@@ -18,6 +19,7 @@ const readFromCache = (cacheKey) => {
     }
 }
 
+// Funktion von Lucas Jellema
 // schreibt Werte in den Cache und gibt einen timestamp und Versionsnummer
 const writeToCache = (cacheKey, fingerprint, member) => {
     let numberOfWrites = cache['_numberOfWrites'] + 1
@@ -31,6 +33,7 @@ const writeToCache = (cacheKey, fingerprint, member) => {
     return { timestamp: cache[cacheKey].timestamp, version: cache[cacheKey].version }
 }
 
+// löscht Member eine Session aus dem Cache
 const deleteSession = (cacheKey) => {
     try {
         if (cache[cacheKey]) {
@@ -49,19 +52,8 @@ const deleteSession = (cacheKey) => {
     }
 }
 
-/*
-// generiert einen neuen key und gibt diesen aus
-const startNewSession = () => {
-    const keyPrefixes = ["funny", "happy", "silly", "cute", "lucky", "pretty", "crazy", "outrageous"]
-    const sessionKey = keyPrefixes[Math.round(keyPrefixes.length * Math.random())] + Date.now()
-    cache[sessionKey] = { value: {}, timestamp: Date.now(), version: 0 }
-    return { sessionKey: sessionKey }
-}
-*/
-
 module.exports = {
     readFromCache: readFromCache,
     writeToCache: writeToCache,
-    deleteSession: deleteSession,
-    //startNewSession: startNewSession
+    deleteSession: deleteSession
 }
