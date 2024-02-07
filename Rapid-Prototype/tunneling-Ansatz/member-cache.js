@@ -4,6 +4,14 @@
 */
 const cache = { "_cacheCreationTime": new Date(), "_numberOfReads": 0, "_numberOfWrites": 0 }
 
+/*
+// erstellt ein neue Gruppe
+const initializeCache = (sessionKey) => {
+    console.log("Das Ist der SessionKey fürs Initalizing: " + sessionKey)
+    cache[sessionKey] = { memberPrint: { print: [], memberName: [] }, memberPermission: { print: [], memberName: [] }, timestamp: Date.now(), version: 0 }
+}
+*/
+
 // Funktion von Lucas Jellema
 // liest MemberNamen einer Session aus dem Cache aus und gibt sie aus
 const readFromCache = (cacheKey) => {
@@ -19,7 +27,7 @@ const readFromCache = (cacheKey) => {
     }
 }
 
-// Funktion von Lucas Jellema
+// Urfunktion von Lucas Jellema
 // schreibt Werte in den Cache und gibt einen timestamp und Versionsnummer
 const writeToCache = (cacheKey, fingerprint, member) => {
     let numberOfWrites = cache['_numberOfWrites'] + 1
@@ -27,9 +35,11 @@ const writeToCache = (cacheKey, fingerprint, member) => {
     let version = (cache[cacheKey] != null ? cache[cacheKey].version : 0) + 1
     let prints = (cache[cacheKey] != null ? cache[cacheKey].memberPrint.print : [])
     let members = (cache[cacheKey] != null ? cache[cacheKey].memberPrint.memberName : [])
+    let perPrints = (cache[cacheKey] != null ? cache[cacheKey].memberPermission.print : [])
+    let permMembers = (cache[cacheKey] != null ? cache[cacheKey].memberPermission.memberName : [])
     prints.push(fingerprint)
     members.push(member)
-    cache[cacheKey] = { memberPrint: { print: prints, memberName: members }, timestamp: Date.now(), version: version }
+    cache[cacheKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints, memberName: permMembers }, timestamp: Date.now(), version: version }
     return { timestamp: cache[cacheKey].timestamp, version: cache[cacheKey].version }
 }
 
@@ -52,8 +62,28 @@ const deleteSession = (cacheKey) => {
     }
 }
 
+// gibt einem Member Rechte für die Session
+const addPermission = (cacheKey, fingerprint, member) => {
+    let numberOfWrites = cache['_numberOfWrites'] + 1
+    cache['_numberOfWrites'] = numberOfWrites
+    /* console.log("DerCache: " + JSON.stringify(cache[cacheKey]))
+    cache[cacheKey].memberPermission = cache[cacheKey]?.memberPermission || { print: [], memberName: [] };
+    console.log("DerCacheDanach: " + JSON.stringify(cache[cacheKey])) */
+    let version = (cache[cacheKey] != null ? cache[cacheKey].version : 0) + 1
+    let prints = (cache[cacheKey] != null ? cache[cacheKey].memberPrint.print : [])
+    let members = (cache[cacheKey] != null ? cache[cacheKey].memberPrint.memberName : [])
+    let perPrints = (cache[cacheKey] != null ? cache[cacheKey].memberPermission.print : [])
+    let permMembers = (cache[cacheKey] != null ? cache[cacheKey].memberPermission.memberName : [])
+    perPrints.push(fingerprint)
+    permMembers.push(member)
+    cache[cacheKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints, memberName: permMembers }, timestamp: Date.now(), version: version }
+    return cache[cacheKey]
+}
+
 module.exports = {
     readFromCache: readFromCache,
     writeToCache: writeToCache,
-    deleteSession: deleteSession
+    deleteSession: deleteSession,
+    addPermission: addPermission,
+    //initializeCache: initializeCache
 }

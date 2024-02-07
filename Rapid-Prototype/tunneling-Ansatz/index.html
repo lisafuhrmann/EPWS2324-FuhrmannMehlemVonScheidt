@@ -11,7 +11,7 @@
 
         let sessionKey;
         let member;
-        let print = Math.random().toString(36).substring(7) + '';
+        let print = Math.random().toString(36).substring(7) + ''; //generiert einen print für den Client
         console.log("Das ist dein Print: " + print);
         const sessionRefreshIntervalDuration = 4000
         let sessionContextFreshInterval
@@ -35,6 +35,7 @@
                 messages.length = 0;
                 joinSession(sessionKey)
                 pushSessionContext({ messages: messages })
+                addPermission(document.getElementById("memberName").value)
             });
         }
 
@@ -58,6 +59,17 @@
             inSession = true
         }
 
+        // fügt einem Member berechtigung hinzu
+        const addPermission = async (memberToGive) => {
+            const requestOptions = {
+                headers: { "Content-Type": "application/json" },
+                method: "POST",
+                mode: "cors",
+                body: JSON.stringify({ fingerprint: print }),
+            };
+            fetch(cacheServiceEndpoint + "permission" + "?sessionKey=" + sessionKey + "&member=" + memberToGive, requestOptions)
+        }
+
         // Funktion von Lucas Jellema
         // Macht eine Get Request um die Daten der Session zu erhalten
         const retrieveSessionContext = async () => {
@@ -76,7 +88,6 @@
         // Funktion von Lucas Jellema
         // Macht eine Put Request um die Daten der Session zu updaten
         const pushSessionContext = async (sessionContext) => {
-
             const requestOptions = {
                 headers: { "Content-Type": "application/json" },
                 method: "PUT",
