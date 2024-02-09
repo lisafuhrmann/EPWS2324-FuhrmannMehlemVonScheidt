@@ -12,15 +12,24 @@ const initializeCache = (sessionKey) => {
 }
 */
 
+// sucht den Print eines Members aus dem Cache der Session
+const convertToPrint = (sessionKey, member) => {
+    if (cache[sessionKey]) {
+        const index = cache[sessionKey].memberPrint.memberName.indexOf(member)
+        console.log("Index gefunden: " + index)
+        if (index !== -1) return cache[sessionKey].memberPrint.print[index]
+    }
+    return ""
+}
+
 // Funktion von Lucas Jellema
 // liest MemberNamen einer Session aus dem Cache aus und gibt sie aus
-const readFromCache = (cacheKey) => {
+const readFromCache = (sessionKey) => {
     try {
         let nor = cache['_numberOfReads'] + 1
         cache['_numberOfReads'] = nor
-        const value = cache[cacheKey] != null ? cache[cacheKey].memberPrint.memberName : ["Diese Gruppe existiert nicht (mehr)!"]
+        const value = cache[sessionKey] != null ? cache[sessionKey].memberPrint.memberName : ["Diese Gruppe existiert nicht (mehr)!"]
         console.log("MemberCache state: " + JSON.stringify(cache));
-        console.log("Dein Großvater war hier und hieß: " + JSON.stringify(value))
         return { "value": value }
     } catch (error) {
         console.error("Error in readFromCache:", error)
@@ -29,30 +38,37 @@ const readFromCache = (cacheKey) => {
 
 // Urfunktion von Lucas Jellema
 // schreibt Werte in den Cache und gibt einen timestamp und Versionsnummer
-const writeToCache = (cacheKey, fingerprint, member) => {
+const writeToCache = (sessionKey, fingerprint, member) => {
     let numberOfWrites = cache['_numberOfWrites'] + 1
     cache['_numberOfWrites'] = numberOfWrites
-    let version = (cache[cacheKey] != null ? cache[cacheKey].version : 0) + 1
-    let prints = (cache[cacheKey] != null ? cache[cacheKey].memberPrint.print : [])
-    let members = (cache[cacheKey] != null ? cache[cacheKey].memberPrint.memberName : [])
-    let perPrints = (cache[cacheKey] != null ? cache[cacheKey].memberPermission.print : [])
-    let permMembers = (cache[cacheKey] != null ? cache[cacheKey].memberPermission.memberName : [])
+    let version = (cache[sessionKey] != null ? cache[sessionKey].version : 0) + 1
+    let prints = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.print : [])
+    let members = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.memberName : [])
+    let perPrints = (cache[sessionKey] != null ? cache[sessionKey].memberPermission.print : [])
     prints.push(fingerprint)
-    members.push(member)
-    cache[cacheKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints, memberName: permMembers }, timestamp: Date.now(), version: version }
-    return { timestamp: cache[cacheKey].timestamp, version: cache[cacheKey].version }
+    if (cache[sessionKey] != null ? cache[sessionKey].memberPrint.memberName.includes(member) : false) {
+        let suffix = 1;
+        while (cache[sessionKey].memberPrint.memberName.includes(member + suffix)) { // Fügt dem Ende des Nutzer Namens eine aufsteigende Zahl hinzu bis der Nutzername einzigartig ist
+            suffix++;
+        }
+        members.push(member + suffix);
+    } else {
+        members.push(member);
+    }
+    cache[sessionKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints }, timestamp: Date.now(), version: version }
+    return { timestamp: cache[sessionKey].timestamp, version: cache[sessionKey].version }
 }
 
 // löscht Member eine Session aus dem Cache
-const deleteSession = (cacheKey) => {
+const deleteSession = (sessionKey) => {
     try {
-        if (cache[cacheKey]) {
-            delete cache[cacheKey];
-            console.log(`Session with key ${cacheKey} has been deleted.`);
+        if (cache[sessionKey]) {
+            delete cache[sessionKey];
+            console.log(`Session with key ${sessionKey} has been deleted.`);
             console.log("success true")
             return { success: true };
         } else {
-            console.log(`Session with key ${cacheKey} not found.`);
+            console.log(`Session with key ${sessionKey} not found.`);
             console.log("Error No Session found.")
             return { success: false, error: "Session not found." };
         }
@@ -63,21 +79,41 @@ const deleteSession = (cacheKey) => {
 }
 
 // gibt einem Member Rechte für die Session
-const addPermission = (cacheKey, fingerprint, member) => {
+const addPermission = (sessionKey, member) => {
     let numberOfWrites = cache['_numberOfWrites'] + 1
     cache['_numberOfWrites'] = numberOfWrites
-    /* console.log("DerCache: " + JSON.stringify(cache[cacheKey]))
-    cache[cacheKey].memberPermission = cache[cacheKey]?.memberPermission || { print: [], memberName: [] };
-    console.log("DerCacheDanach: " + JSON.stringify(cache[cacheKey])) */
-    let version = (cache[cacheKey] != null ? cache[cacheKey].version : 0) + 1
-    let prints = (cache[cacheKey] != null ? cache[cacheKey].memberPrint.print : [])
-    let members = (cache[cacheKey] != null ? cache[cacheKey].memberPrint.memberName : [])
-    let perPrints = (cache[cacheKey] != null ? cache[cacheKey].memberPermission.print : [])
-    let permMembers = (cache[cacheKey] != null ? cache[cacheKey].memberPermission.memberName : [])
-    perPrints.push(fingerprint)
-    permMembers.push(member)
-    cache[cacheKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints, memberName: permMembers }, timestamp: Date.now(), version: version }
-    return cache[cacheKey]
+    let version = (cache[sessionKey] != null ? cache[sessionKey].version : 0) + 1
+    let prints = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.print : [])
+    let members = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.memberName : [])
+    let perPrints = (cache[sessionKey] != null ? cache[sessionKey].memberPermission.print : [])
+    const print = convertToPrint(sessionKey, member)
+    if (!cache[sessionKey].memberPermission.print.includes(print) && print !== "") {
+        perPrints.push(print)
+        console.log("Gebe Print Rechte!: " + print)
+        cache[sessionKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints }, timestamp: Date.now(), version: version }
+    }
+    return cache[sessionKey]
+}
+
+// gibt dem Host Rechte für die Session
+const addHost = (sessionKey, hostPrint) => {
+    let numberOfWrites = cache['_numberOfWrites'] + 1
+    cache['_numberOfWrites'] = numberOfWrites
+    let version = (cache[sessionKey] != null ? cache[sessionKey].version : 0) + 1
+    let prints = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.print : [])
+    let members = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.memberName : [])
+    let perPrints = (cache[sessionKey] != null ? cache[sessionKey].memberPermission.print : [])
+    perPrints.push(hostPrint)
+    console.log("Gebe Host Rechte!: " + hostPrint)
+    cache[sessionKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints }, timestamp: Date.now(), version: version }
+    return cache[sessionKey]
+}
+
+const hasPermission = (sessionKey, fingerprint) => {
+    if (cache[sessionKey]) {
+        return cache[sessionKey].memberPrint.print.includes(fingerprint) && cache[sessionKey].memberPermission.print.includes(fingerprint)
+    }
+    else return false
 }
 
 module.exports = {
@@ -85,5 +121,7 @@ module.exports = {
     writeToCache: writeToCache,
     deleteSession: deleteSession,
     addPermission: addPermission,
+    hasPermission: hasPermission,
+    addHost: addHost
     //initializeCache: initializeCache
 }

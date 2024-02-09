@@ -20,6 +20,7 @@ console.log("Root Path: " + rootPath)
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/src/css/main.css', express.static(path.join(__dirname, 'src/css/main.css')));
 
 // Set up localtunnel
 const subdomain = 'ripe-mangos-super-smell';
@@ -56,6 +57,9 @@ app.post('/', (req, res) => {
     result = cache.startNewSession();
     //memberCache.initializeCache(result.sessionKey);
     console.log("Result: " + JSON.stringify(result))
+    const print = req.body;
+    console.log("Das ist der Host: " + JSON.stringify(print.fingerprint))
+    memberCache.addHost("\"" + result.sessionKey + "\"", print.fingerprint)
     res.set(allowedHeader);
 
     res.status(200).send({
@@ -84,12 +88,16 @@ app.delete('/', (req, res) => {
     const sessionKey = req.query.sessionKey;
     const print = req.query.print;
 
-    result = cache.deleteSession(sessionKey)
-    memberResult = memberCache.deleteSession(sessionKey)
-    console.log("Result von Cache delte: " + JSON.stringify(result) + " und Member Cache: " + JSON.stringify(memberResult))
-    res.set(allowedHeader);
+    if (memberCache.hasPermission(sessionKey, print)) {
+        result = cache.deleteSession(sessionKey)
+        memberResult = memberCache.deleteSession(sessionKey)
+        console.log("Result von Cache delte: " + JSON.stringify(result) + " und Member Cache: " + JSON.stringify(memberResult))
+        res.set(allowedHeader);
 
-    res.status(200).send();
+        res.status(200).send();
+    } else {
+        res.status(403).send("Sie haben keine Rechte für diese Gruppe");
+    }
 });
 
 // Funktion für Test und Debbunging zwecke. (CORS macht manchmal Options Requests um zu prüfen ob die Anfrage gültig ist)
@@ -126,12 +134,17 @@ app.post('/permission', async (req, res) => {
         const member = req.query.member;
         const print = req.body;
 
+        console.log("Der permission Member: " + JSON.stringify(member))
         console.log("Der permission print: " + JSON.stringify(print.fingerprint))
-        result = memberCache.addPermission(sessionKey, print.fingerprint, member);
-        console.log("Permission Result: " + JSON.stringify(result));
+        if (memberCache.hasPermission(sessionKey, print.fingerprint)) {
+            result = memberCache.addPermission(sessionKey, member);
+            console.log("Permission Result: " + JSON.stringify(result));
 
-        res.set(allowedHeader);
-        res.status(200).send();
+            res.set(allowedHeader);
+            res.status(200).send();
+        } else {
+            res.status(403).send("Sie haben keine Rechte für diese Gruppe");
+        }
     } catch (error) {
         console.error("Error:", error);
         res.status(500).send("Internal Server Error");

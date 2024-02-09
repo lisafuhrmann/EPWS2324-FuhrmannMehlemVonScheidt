@@ -6,6 +6,7 @@
 <html>
 
 <head>
+    <link rel="stylesheet" href="./src/css/main.css" />
     <script>
         const cacheServiceEndpoint = "https://ripe-mangos-super-smell.loca.lt/"
 
@@ -24,8 +25,10 @@
             document.getElementById("sessionKey").innerText = ""
             const response = fetch(cacheServiceEndpoint,
                 {
-                    "method": "POST",
-                    "mode": "cors",
+                    headers: { "Content-Type": "application/json" },
+                    method: "POST",
+                    mode: "cors",
+                    body: JSON.stringify({ fingerprint: print }),
                 }
             )
             response.then(data => data.json()).then((json) => {
@@ -35,7 +38,6 @@
                 messages.length = 0;
                 joinSession(sessionKey)
                 pushSessionContext({ messages: messages })
-                addPermission(document.getElementById("memberName").value)
             });
         }
 
@@ -117,11 +119,6 @@
             };
 
             fetch(cacheServiceEndpoint + "?sessionKey=" + sessionKey + "&print=" + print, requestOptions)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok: ' + response.statusText);
-                    }
-                })
         }
 
         // Funktion von Lucas Jellema
@@ -140,7 +137,7 @@
             memberTextarea.value = memberContent
         }
 
-        // Funktion von Lucas Jellema
+        // Urfunktion von Lucas Jellema
         window.onload = function () {
             function initializePage() {
                 document.getElementById("startSession").addEventListener("click", () => { startSession() })
@@ -154,6 +151,10 @@
                     pushSessionContext({ messages: messages })
                 })
                 document.getElementById("deleteSession").addEventListener("click", () => { deleteSession() })
+                document.getElementById("addPermission").addEventListener("click", () => {
+                    const permissionName = document.getElementById("permissionName").value
+                    addPermission(permissionName)
+                })
             }
 
             initializePage();
@@ -164,10 +165,16 @@
 <body>
     <label for="joinSessionKey">Session Key for Session To Join</label>
     <input id="joinSessionKey"></input>
+    <br />
     <label for="memberName">Name für die Session</label>
     <input id="memberName"></input>
+    <br />
+    <label for="permissionName">Nutzer dem Rechte gegeben werden sollen</label>
+    <input id="permissionName"></input>
+    <br />
     <input type="button" id="joinSession" value="Join Existing Multi Client Session" />
     <input type="button" id="startSession" value="Start Multi Client Session" />
+    <input type="button" id="addPermission" value="Vergebe Rechte" />
     <input type="button" id="deleteSession" value="Delete current Session" />
     <h3>Multi Client Session Identifier <p id="sessionKey"></p>
     </h3>
