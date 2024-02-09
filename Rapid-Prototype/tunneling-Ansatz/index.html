@@ -1,26 +1,34 @@
-<!-- Ursprungscode und Konzept von: https://technology.amis.nl/cloud/implementing-serverless-multi-client-session-synchronization-with-oracle-cloud-infrastructure/ -->
+<!-- Grundcode und Konzept von: https://technology.amis.nl/cloud/implementing-serverless-multi-client-session-synchronization-with-oracle-cloud-infrastructure/
+* Author: Lucas Jellema
+* GitHub: https://github.com/lucasjellema/live-cache/blob/main/index.html 
+-->
 <!DOCTYPE html>
 <html>
 
 <head>
+    <link rel="stylesheet" href="./src/css/main.css" />
     <script>
         const cacheServiceEndpoint = "https://ripe-mangos-super-smell.loca.lt/"
 
         let sessionKey;
         let member;
-        let print = Math.random().toString(36).substring(7) + '';
+        let print = Math.random().toString(36).substring(7) + ''; //generiert einen print für den Client
         console.log("Das ist dein Print: " + print);
         const sessionRefreshIntervalDuration = 4000
         let sessionContextFreshInterval
         let inSession = false
         let messages = []
 
+        // Funktion von Lucas Jellema
+        // macht eine Post Request um eine neue Session zu starten
         const startSession = async () => {
             document.getElementById("sessionKey").innerText = ""
             const response = fetch(cacheServiceEndpoint,
                 {
-                    "method": "POST",
-                    "mode": "cors",
+                    headers: { "Content-Type": "application/json" },
+                    method: "POST",
+                    mode: "cors",
+                    body: JSON.stringify({ fingerprint: print }),
                 }
             )
             response.then(data => data.json()).then((json) => {
@@ -33,16 +41,14 @@
             });
         }
 
-        const joinSession = async (sessionToJoinKey /*= sessionKey*/) => {
+        // Urfunktion von Lucas Jellema
+        // tritt einer Session bei und macht eine Post Request um sich als Memeber der Grupper der Session hinzuzufügen
+        const joinSession = async (sessionToJoinKey) => {
             member = document.getElementById("memberName").value
             sessionKey = sessionToJoinKey
             document.getElementById("sessionKey").innerText = sessionKey
             messages.length = 0;
 
-            /*
-            print = Math.random().toString(36).substring(7) + '';
-            console.log("Das ist dein Print: " + print);
-            */
             const requestOptions = {
                 headers: { "Content-Type": "application/json" },
                 method: "POST",
@@ -55,6 +61,19 @@
             inSession = true
         }
 
+        // fügt einem Member berechtigung hinzu
+        const addPermission = async (memberToGive) => {
+            const requestOptions = {
+                headers: { "Content-Type": "application/json" },
+                method: "POST",
+                mode: "cors",
+                body: JSON.stringify({ fingerprint: print }),
+            };
+            fetch(cacheServiceEndpoint + "permission" + "?sessionKey=" + sessionKey + "&member=" + memberToGive, requestOptions)
+        }
+
+        // Funktion von Lucas Jellema
+        // Macht eine Get Request um die Daten der Session zu erhalten
         const retrieveSessionContext = async () => {
             const requestOptions = {
                 "method": "GET",
@@ -68,8 +87,9 @@
                 .catch(error => console.log('error', error));
         }
 
+        // Funktion von Lucas Jellema
+        // Macht eine Put Request um die Daten der Session zu updaten
         const pushSessionContext = async (sessionContext) => {
-
             const requestOptions = {
                 headers: { "Content-Type": "application/json" },
                 method: "PUT",
@@ -90,6 +110,7 @@
                 .catch(error => console.log('error', error));
         }
 
+        // Macht eine Put Request um die Daten der Session zu updaten
         const deleteSession = async () => {
             const requestOptions = {
                 "method": "DELETE",
@@ -98,13 +119,10 @@
             };
 
             fetch(cacheServiceEndpoint + "?sessionKey=" + sessionKey + "&print=" + print, requestOptions)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok: ' + response.statusText);
-                    }
-                })
         }
 
+        // Funktion von Lucas Jellema
+        // Verarbeitet die erhaltenen Daten der Session (hier um sie anzuzeigen)
         const processSessionContext = (sessionContext) => {
             const messagesTextarea = document.getElementById("messages")
             const memberTextarea = document.getElementById("members")
@@ -119,6 +137,7 @@
             memberTextarea.value = memberContent
         }
 
+        // Urfunktion von Lucas Jellema
         window.onload = function () {
             function initializePage() {
                 document.getElementById("startSession").addEventListener("click", () => { startSession() })
@@ -132,6 +151,10 @@
                     pushSessionContext({ messages: messages })
                 })
                 document.getElementById("deleteSession").addEventListener("click", () => { deleteSession() })
+                document.getElementById("addPermission").addEventListener("click", () => {
+                    const permissionName = document.getElementById("permissionName").value
+                    addPermission(permissionName)
+                })
             }
 
             initializePage();
@@ -142,10 +165,16 @@
 <body>
     <label for="joinSessionKey">Session Key for Session To Join</label>
     <input id="joinSessionKey"></input>
+    <br />
     <label for="memberName">Name für die Session</label>
     <input id="memberName"></input>
+    <br />
+    <label for="permissionName">Nutzer dem Rechte gegeben werden sollen</label>
+    <input id="permissionName"></input>
+    <br />
     <input type="button" id="joinSession" value="Join Existing Multi Client Session" />
     <input type="button" id="startSession" value="Start Multi Client Session" />
+    <input type="button" id="addPermission" value="Vergebe Rechte" />
     <input type="button" id="deleteSession" value="Delete current Session" />
     <h3>Multi Client Session Identifier <p id="sessionKey"></p>
     </h3>
