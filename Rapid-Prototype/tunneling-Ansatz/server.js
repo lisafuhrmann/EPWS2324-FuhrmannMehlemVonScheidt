@@ -21,6 +21,7 @@ console.log("Root Path: " + rootPath)
 app.use(cors());
 app.use(bodyParser.json());
 app.use('/src/css/main.css', express.static(path.join(__dirname, 'src/css/main.css')));
+app.use('/src', express.static(path.join(__dirname, 'src')));
 
 // Set up localtunnel
 const subdomain = 'ripe-mangos-super-smell';
@@ -139,6 +140,45 @@ app.post('/permission', async (req, res) => {
         if (memberCache.hasPermission(sessionKey, print.fingerprint)) {
             result = memberCache.addPermission(sessionKey, member);
             console.log("Permission Result: " + JSON.stringify(result));
+
+            res.set(allowedHeader);
+            res.status(200).send();
+        } else {
+            res.status(403).send("Sie haben keine Rechte für diese Gruppe");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+app.get('/videoStart', async (req, res) => {
+    try {
+        const sessionKey = req.query.sessionKey;
+        const print = req.query.print;
+        const time = req.query.time;
+
+        if (memberCache.hasPermission(sessionKey, print)) {
+            cache.writeVideoStart(sessionKey, time);
+
+            res.set(allowedHeader);
+            res.status(200).send();
+        } else {
+            res.status(403).send("Sie haben keine Rechte für diese Gruppe");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+app.get('/videoPause', async (req, res) => {
+    try {
+        const sessionKey = req.query.sessionKey;
+        const print = req.query.print;
+
+        if (memberCache.hasPermission(sessionKey, print)) {
+            cache.writeVideoPause(sessionKey);
 
             res.set(allowedHeader);
             res.status(200).send();

@@ -11,7 +11,10 @@ const readFromCache = (sessionKey) => {
         let nor = cache['_numberOfReads'] + 1
         cache['_numberOfReads'] = nor
         const value = cache[sessionKey] != null ? cache[sessionKey].value : { "messages": ["Diese Gruppe existiert nicht (mehr)!"] }
-        return { "value": value }
+        const timestamp = cache[sessionKey] != null ? cache[sessionKey].timestamp : Date.now()
+        const version = cache[sessionKey] != null ? cache[sessionKey].version : 0
+        console.log("Cache state: " + JSON.stringify(cache));
+        return { "value": value, "timestamp": timestamp, "version": version }
     } catch (error) {
         console.error("Error in readFromCache:", error)
     }
@@ -55,9 +58,33 @@ const deleteSession = (sessionKey) => {
     }
 }
 
+// fügt der Cache den Befehl zum abspielen eines Videos hinzu
+const writeVideoStart = (sessionKey, time) => {
+    let numberOfWrites = cache['_numberOfWrites'] + 1
+    cache['_numberOfWrites'] = numberOfWrites
+    let version = (cache[sessionKey] != null ? cache[sessionKey].version : 0) + 1
+    let value = (cache[sessionKey] != null ? cache[sessionKey].value : { "messages": [] })
+    console.log("Das ist value" + JSON.stringify(value))
+    value.messages.push("a1_videoStartPlay_a1" + "%" + time)
+    cache[sessionKey] = { value: value, timestamp: Date.now(), version: version }
+}
+
+// fügt der Cache den Befehl zum abspielen eines Videos hinzu
+const writeVideoPause = (sessionKey) => {
+    let numberOfWrites = cache['_numberOfWrites'] + 1
+    cache['_numberOfWrites'] = numberOfWrites
+    let version = (cache[sessionKey] != null ? cache[sessionKey].version : 0) + 1
+    let value = (cache[sessionKey] != null ? cache[sessionKey].value : { "messages": [] })
+    console.log("Das ist value" + JSON.stringify(value))
+    value.messages.push("b2_videoStopPlay_b2")
+    cache[sessionKey] = { value: value, timestamp: Date.now(), version: version }
+}
+
 module.exports = {
     readFromCache: readFromCache,
     writeToCache: writeToCache,
     startNewSession: startNewSession,
     deleteSession: deleteSession,
+    writeVideoStart: writeVideoStart,
+    writeVideoPause: writeVideoPause
 }

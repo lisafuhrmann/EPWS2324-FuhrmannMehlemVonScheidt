@@ -29,7 +29,7 @@ const readFromCache = (sessionKey) => {
         let nor = cache['_numberOfReads'] + 1
         cache['_numberOfReads'] = nor
         const value = cache[sessionKey] != null ? cache[sessionKey].memberPrint.memberName : ["Diese Gruppe existiert nicht (mehr)!"]
-        console.log("MemberCache state: " + JSON.stringify(cache));
+        ///console.log("MemberCache state: " + JSON.stringify(cache));
         return { "value": value }
     } catch (error) {
         console.error("Error in readFromCache:", error)
