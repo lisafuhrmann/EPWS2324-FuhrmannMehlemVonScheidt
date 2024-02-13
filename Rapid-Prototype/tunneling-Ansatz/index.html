@@ -9,7 +9,10 @@
     <link rel="stylesheet" href="./src/css/main.css" />
     <script src="./src/script/video.js" defer></script>
     <script>
-        const cacheServiceEndpoint = "https://ripe-mangos-super-smell.loca.lt/"
+        //const cacheServiceEndpoint = "https://ripe-mangos-super-smell.loca.lt/"
+        const currentUrl = window.location.href;
+        const cacheServiceEndpoint = currentUrl.replace("index.html", "");
+        console.log("Cleaned URL:", cacheServiceEndpoint);
 
         let sessionKey;
         let member;
@@ -19,7 +22,7 @@
         let sessionContextFreshInterval
         let inSession = false
         let messages = []
-        let currentVersion = 0
+        let currentVersion
 
         // Funktion von Lucas Jellema
         // macht eine Post Request um eine neue Session zu starten
@@ -50,6 +53,7 @@
             sessionKey = sessionToJoinKey
             document.getElementById("sessionKey").innerText = sessionKey
             messages.length = 0;
+            currentVersion = -1;
 
             const requestOptions = {
                 headers: { "Content-Type": "application/json" },
@@ -74,6 +78,28 @@
             fetch(cacheServiceEndpoint + "permission" + "?sessionKey=" + sessionKey + "&member=" + memberToGive, requestOptions)
         }
 
+        // Bannt ein Member von der Session
+        const removeMember = async (memberToRemove) => {
+            const requestOptions = {
+                "method": "DELETE",
+                "mode": "cors",
+                "redirect": "follow"
+            };
+
+            fetch(cacheServiceEndpoint + "member" + "?sessionKey=" + sessionKey + "&member=" + memberToRemove + "&print=" + print, requestOptions)
+        }
+
+        // Entfernt die Rechte eines Members
+        const removePermission = async (memberToRemove) => {
+            const requestOptions = {
+                "method": "DELETE",
+                "mode": "cors",
+                "redirect": "follow"
+            };
+
+            fetch(cacheServiceEndpoint + "permission" + "?sessionKey=" + sessionKey + "&member=" + memberToRemove + "&print=" + print, requestOptions)
+        }
+
         // Funktion von Lucas Jellema
         // Macht eine Get Request um die Daten der Session zu erhalten
         const retrieveSessionContext = async () => {
@@ -83,7 +109,7 @@
                 "redirect": "follow"
             };
 
-            fetch(cacheServiceEndpoint + "?sessionKey=" + sessionKey, requestOptions)
+            fetch(cacheServiceEndpoint + "?sessionKey=" + sessionKey + "&print=" + print, requestOptions)
                 .then(response => response.json())
                 .then(result => processSessionContext(result))
                 .catch(error => console.log('error', error));
@@ -101,7 +127,7 @@
             };
             console.log("PUT Request: " + requestOptions)
 
-            fetch(cacheServiceEndpoint + "?sessionKey=" + sessionKey, requestOptions)
+            fetch(cacheServiceEndpoint + "?sessionKey=" + sessionKey + "&print=" + print, requestOptions)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok: ' + response.statusText);
@@ -136,6 +162,7 @@
 
             if (currentVersion < newVersion) {
                 const newMessages = [];
+                currentVersion = newVersion;
                 for (let i = 0; i < contextMessages.length; i++) { //filtert die alten Nachrichten aus dem Array
                     if (messages[i] !== contextMessages[i]) {
                         newMessages.push(contextMessages[i]);
@@ -144,7 +171,7 @@
                 console.log("newMessages: " + newMessages)
                 //messages = newMessages
                 for (let i = 0; i < newMessages.length; i++) { //arbeitet die Befehle aus dem Array ab
-                    switch (newMessages[i].substring(0,3)) {
+                    switch (newMessages[i].substring(0, 3)) {
                         case "a1_":
                             letsPlay = true;
                             const playtime = newMessages[i].substring(21)
@@ -188,6 +215,14 @@
                     const permissionName = document.getElementById("permissionName").value
                     addPermission(permissionName)
                 })
+                document.getElementById("removePermission").addEventListener("click", () => {
+                    const permissionName = document.getElementById("permissionName").value
+                    removePermission(permissionName)
+                })
+                document.getElementById("removeMember").addEventListener("click", () => {
+                    const permissionName = document.getElementById("permissionName").value
+                    removeMember(permissionName)
+                })
             }
             initializePage();
         }
@@ -201,12 +236,14 @@
     <label for="memberName">Name für die Session</label>
     <input id="memberName"></input>
     <br />
-    <label for="permissionName">Nutzer dem Rechte gegeben werden sollen</label>
+    <label for="permissionName">Nutzername für konfiguration</label>
     <input id="permissionName"></input>
     <br />
     <input type="button" id="joinSession" value="Join Existing Multi Client Session" />
     <input type="button" id="startSession" value="Start Multi Client Session" />
     <input type="button" id="addPermission" value="Vergebe Rechte" />
+    <input type="button" id="removePermission" value="Entferne Rechte" />
+    <input type="button" id="removeMember" value="Banne Nutzer" />
     <input type="button" id="deleteSession" value="Delete current Session" />
     <h3>Multi Client Session Identifier <p id="sessionKey"></p>
     </h3>

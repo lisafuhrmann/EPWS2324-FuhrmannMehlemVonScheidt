@@ -24,7 +24,8 @@ app.use('/src/css/main.css', express.static(path.join(__dirname, 'src/css/main.c
 app.use('/src', express.static(path.join(__dirname, 'src')));
 
 // Set up localtunnel
-const subdomain = 'ripe-mangos-super-smell';
+////const subdomain = 'ripe-mangos-super-smell';
+const subdomain = '';
 localtunnel(port, { subdomain: subdomain }, (err, tunnel) => {
     if (err) {
         console.error('Error creating tunnel:', err);
@@ -36,20 +37,25 @@ localtunnel(port, { subdomain: subdomain }, (err, tunnel) => {
 // Gibt den SessionContext aus wenn ein sessionKey vorhanden ist, ansonsten gibt die HTML Seite
 app.get('/', (req, res) => {
     const sessionKey = req.query.sessionKey;
+    const print = req.query.print;
 
     if (!sessionKey || sessionKey.trim() === '') {
         res.redirect('index.html');
     } else {
-        result = cache.readFromCache(sessionKey);
-        member = memberCache.readFromCache(sessionKey);
-        console.log("Result: " + JSON.stringify(result))
-        res.set(allowedHeader);
+        if (!memberCache.isBanned(sessionKey, print)) {
+            result = cache.readFromCache(sessionKey);
+            member = memberCache.readFromCache(sessionKey);
+            console.log("Result: " + JSON.stringify(result))
+            res.set(allowedHeader);
 
-        res.status(200).send({
-            body: result,
-            memberBody: member,
-            mode: "cors"
-        });
+            res.status(200).send({
+                body: result,
+                memberBody: member,
+                mode: "cors"
+            });
+        } else {
+            res.status(403).send("Sie haben keine Rechte für diese Gruppe");
+        }
     }
 });
 
@@ -73,15 +79,20 @@ app.put('/', (req, res) => {
     const theBody = req.body;
     JSON.stringify("The Body: " + theBody);
     const sessionKey = req.query.sessionKey;
+    const print = req.query.print;
 
-    result = cache.writeToCache(sessionKey, theBody.value)
-    console.log("Result von Write to Cache: " + JSON.stringify(result))
-    res.set(allowedHeader);
+    if (!memberCache.isBanned(sessionKey, print)) {
+        result = cache.writeToCache(sessionKey, theBody.value)
+        console.log("Result von Write to Cache: " + JSON.stringify(result))
+        res.set(allowedHeader);
 
-    res.status(200).send({
-        body: result,
-        mode: "cors"
-    });
+        res.status(200).send({
+            body: result,
+            mode: "cors"
+        });
+    } else {
+        res.status(403).send("Sie haben keine Rechte für diese Gruppe");
+    }
 });
 
 // löscht die Daten der Session mit dem übermittelten sessionKey
@@ -128,6 +139,29 @@ app.post('/member', async (req, res) => {
     }
 });
 
+// fügt ein Member einer Session Gruppe hinzu
+app.delete('/member', async (req, res) => {
+    try {
+        const sessionKey = req.query.sessionKey;
+        const member = req.query.member;
+        const print = req.query.print;
+
+        if (memberCache.hasPermission(sessionKey, print)) {
+            console.log("Banne das hier: " + JSON.stringify(print))
+            result = memberCache.removeMember(sessionKey, member);
+            console.log("Result vom MemeberDelete: " + JSON.stringify(result));
+
+            res.set(allowedHeader);
+            res.status(200).send();
+        } else {
+            res.status(403).send("Sie haben keine Rechte für diese Gruppe");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
 // gibt einem Member Rechte
 app.post('/permission', async (req, res) => {
     try {
@@ -140,6 +174,30 @@ app.post('/permission', async (req, res) => {
         if (memberCache.hasPermission(sessionKey, print.fingerprint)) {
             result = memberCache.addPermission(sessionKey, member);
             console.log("Permission Result: " + JSON.stringify(result));
+
+            res.set(allowedHeader);
+            res.status(200).send();
+        } else {
+            res.status(403).send("Sie haben keine Rechte für diese Gruppe");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+// entfernt die Rechte eines Members
+app.delete('/permission', async (req, res) => {
+    try {
+        const sessionKey = req.query.sessionKey;
+        const member = req.query.member;
+        const print = req.query.print;
+
+        console.log("Der permission Member: " + JSON.stringify(member))
+        console.log("Der permission print: " + JSON.stringify(print))
+        if (memberCache.hasPermission(sessionKey, print)) {
+            result = memberCache.removePermission(sessionKey, member);
+            console.log("removePermission Result: " + JSON.stringify(result));
 
             res.set(allowedHeader);
             res.status(200).send();
