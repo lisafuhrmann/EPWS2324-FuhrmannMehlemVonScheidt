@@ -8,21 +8,24 @@
 <head>
     <link rel="stylesheet" href="./src/css/main.css" />
     <script src="./src/script/video.js" defer></script>
+    <script src="./src/script/qrcode.min.js"></script>
     <script>
-        //const cacheServiceEndpoint = "https://ripe-mangos-super-smell.loca.lt/"
+        ///const cacheServiceEndpoint = "https://ripe-mangos-super-smell.loca.lt/"
         const currentUrl = window.location.href;
         const cacheServiceEndpoint = currentUrl.replace("index.html", "");
         console.log("Cleaned URL:", cacheServiceEndpoint);
 
         let sessionKey;
         let member;
-        let print = Math.random().toString(36).substring(7) + ''; //generiert einen print für den Client
+        let print = Math.random().toString(36).substring(7) + ''; //generiert einen "fingerprint" für den Client
         console.log("Das ist dein Print: " + print);
         const sessionRefreshIntervalDuration = 1000
+        const qrCode = document.getElementById("qrcode");
         let sessionContextFreshInterval
         let inSession = false
         let messages = []
         let currentVersion
+        let videoMode = true
 
         // Funktion von Lucas Jellema
         // macht eine Post Request um eine neue Session zu starten
@@ -170,18 +173,30 @@
                 }
                 console.log("newMessages: " + newMessages)
                 //messages = newMessages
+                let playtime
                 for (let i = 0; i < newMessages.length; i++) { //arbeitet die Befehle aus dem Array ab
                     switch (newMessages[i].substring(0, 3)) {
                         case "a1_":
                             letsPlay = true;
-                            const playtime = newMessages[i].substring(21)
+                            playtime = newMessages[i].substring(21)
                             console.log("This is playtime: " + playtime)
                             video.currentTime = playtime;
                             video.play()
                             break;
-                        case "b2_":
+                        case "a2_":
                             letsPause = true;
                             video.pause()
+                            break;
+                        case "b1_":
+                            letsPlay = true;
+                            playtime = newMessages[i].substring(21)
+                            console.log("This is playtime: " + playtime)
+                            audio.currentTime = playtime;
+                            audio.play()
+                            break;
+                        case "b2_":
+                            letsPause = true;
+                            audio.pause()
                             break;
                         default:
                             break;
@@ -224,6 +239,7 @@
                     removeMember(permissionName)
                 })
             }
+            new QRCode(document.getElementById("qrcode"), cacheServiceEndpoint);
             initializePage();
         }
     </script>
@@ -255,10 +271,19 @@
     <textarea id="messages" rows="10" columns="80"></textarea>
     <textarea id="members" rows="10" columns="80"></textarea>
     <br />
-    <video id="videos" controls>
-        <source src="./src/video/NeverGonnaGiveYouUp.mp4" type="video/mp4" />
-        </p>
-    </video>
+
+    <div id="mediaContainer">
+        <video id="videos" controls>
+            <source src="./src/video/NeverGonnaGiveYouUp.mp4" type="video/mp4" />
+            </p>
+        </video>
+        <audio id="audios" controls>
+            <source src="./src/audio/HyruleCastle.ogg" type="audio/ogg" />
+        </audio>
+    </div>
+    <br />
+
+    <div id="qrcode"></div>
 </body>
 
 </html>
