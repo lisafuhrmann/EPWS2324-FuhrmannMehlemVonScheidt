@@ -76,7 +76,29 @@ const writeVideoPause = (sessionKey) => {
     let version = (cache[sessionKey] != null ? cache[sessionKey].version : 0) + 1
     let value = (cache[sessionKey] != null ? cache[sessionKey].value : { "messages": [] })
     console.log("Das ist value" + JSON.stringify(value))
-    value.messages.push("b2_videoStopPlay_b2")
+    value.messages.push("a2_videoStopPlay_a2")
+    cache[sessionKey] = { value: value, timestamp: Date.now(), version: version }
+}
+
+// fügt der Cache den Befehl zum abspielen eines Videos hinzu
+const writeAudioStart = (sessionKey, time) => {
+    let numberOfWrites = cache['_numberOfWrites'] + 1
+    cache['_numberOfWrites'] = numberOfWrites
+    let version = (cache[sessionKey] != null ? cache[sessionKey].version : 0) + 1
+    let value = (cache[sessionKey] != null ? cache[sessionKey].value : { "messages": [] })
+    console.log("Das ist value" + JSON.stringify(value))
+    value.messages.push("b1_audioStartPlay_b1" + "%" + time)
+    cache[sessionKey] = { value: value, timestamp: Date.now(), version: version }
+}
+
+// fügt der Cache den Befehl zum abspielen eines Videos hinzu
+const writeAudioPause = (sessionKey) => {
+    let numberOfWrites = cache['_numberOfWrites'] + 1
+    cache['_numberOfWrites'] = numberOfWrites
+    let version = (cache[sessionKey] != null ? cache[sessionKey].version : 0) + 1
+    let value = (cache[sessionKey] != null ? cache[sessionKey].value : { "messages": [] })
+    console.log("Das ist value" + JSON.stringify(value))
+    value.messages.push("b2_audioStopPlay_b2")
     cache[sessionKey] = { value: value, timestamp: Date.now(), version: version }
 }
 
@@ -86,5 +108,7 @@ module.exports = {
     startNewSession: startNewSession,
     deleteSession: deleteSession,
     writeVideoStart: writeVideoStart,
-    writeVideoPause: writeVideoPause
+    writeVideoPause: writeVideoPause,
+    writeAudioStart: writeAudioStart,
+    writeAudioPause: writeAudioPause
 }

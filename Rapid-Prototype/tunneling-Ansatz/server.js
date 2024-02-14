@@ -210,7 +210,7 @@ app.delete('/permission', async (req, res) => {
     }
 });
 
-app.get('/videoStart', async (req, res) => {
+app.put('/videoStart', async (req, res) => {
     try {
         const sessionKey = req.query.sessionKey;
         const print = req.query.print;
@@ -230,13 +230,52 @@ app.get('/videoStart', async (req, res) => {
     }
 });
 
-app.get('/videoPause', async (req, res) => {
+app.put('/videoPause', async (req, res) => {
     try {
         const sessionKey = req.query.sessionKey;
         const print = req.query.print;
 
         if (memberCache.hasPermission(sessionKey, print)) {
             cache.writeVideoPause(sessionKey);
+
+            res.set(allowedHeader);
+            res.status(200).send();
+        } else {
+            res.status(403).send("Sie haben keine Rechte für diese Gruppe");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+app.put('/audioStart', async (req, res) => {
+    try {
+        const sessionKey = req.query.sessionKey;
+        const print = req.query.print;
+        const time = req.query.time;
+
+        if (memberCache.hasPermission(sessionKey, print)) {
+            cache.writeAudioStart(sessionKey, time);
+
+            res.set(allowedHeader);
+            res.status(200).send();
+        } else {
+            res.status(403).send("Sie haben keine Rechte für diese Gruppe");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+app.put('/audioPause', async (req, res) => {
+    try {
+        const sessionKey = req.query.sessionKey;
+        const print = req.query.print;
+
+        if (memberCache.hasPermission(sessionKey, print)) {
+            cache.writeAudioPause(sessionKey);
 
             res.set(allowedHeader);
             res.status(200).send();
