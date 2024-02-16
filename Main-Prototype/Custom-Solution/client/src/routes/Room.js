@@ -1,24 +1,30 @@
-// Importiert React-Hooks, Router-Hook und Socket.io-Client
 import React, { useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import io from "socket.io-client";
 
+// Einfache Container für Layout-Zwecke
+const Container = ({ children }) => <div>{children}</div>;
+const LeftRow = ({ children }) => <div>{children}</div>;
+const RightRow = ({ children }) => <div>{children}</div>;
+
 const Room = () => {
-  // Zugriff auf Raum-ID aus URL-Parameter
-  const { roomID } = useParams();
-  // Referenzen für Videoelemente und WebRTC/Socket-Instanzen
+  const { roomID } = useParams(); //Raum-ID aus URL
+  //Referenzen für DOM-Elemente und Objekte
   const userVideo = useRef();
   const partnerVideo = useRef();
   const peerRef = useRef();
   const socketRef = useRef();
   const otherUser = useRef();
   const userStream = useRef();
+  const localVideoPlayer = useRef();
+  const dataChannelRef = useRef(null);
+
+  const videoSrc = "/videos/sample-video.mp4";
 
   useEffect(() => {
-    // Asynchrone Funktion zum Einrichten von Medien und Socket-Verbindungen
     const setupMedia = async () => {
       try {
-        // Anfordern des Zugriffs auf Kamera und Mikrofon
+        // Zugriff auf Kamera/Mikrofon und Einrichtung der Socket-Verbindung
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
           video: true,
@@ -26,11 +32,10 @@ const Room = () => {
         userVideo.current.srcObject = stream;
         userStream.current = stream;
 
-        // Socket.io-Verbindung zum Server
         socketRef.current = io.connect("/");
-        socketRef.current.emit("join_room", roomID);
+        socketRef.current.emit("join_room", roomID); // Beitritt zu einem Raum
 
-        // Socket-Ereignishandler
+        // Ereignishandler für Socket-Kommunikation
         socketRef.current.on("other_user", (userID) => {
           callUser(userID);
           otherUser.current = userID;
@@ -48,14 +53,15 @@ const Room = () => {
 
     setupMedia();
 
-    // Bereinigung bei Komponentenzerstörung
+    // Bereinigt Ressourcen bei Komponenten-Unmount
     return () => {
       userStream.current?.getTracks().forEach((track) => track.stop());
       socketRef.current?.disconnect();
     };
   }, [roomID]);
 
-  // Initiieren eines Anrufs
+  // Funktionen zur Verwaltung von WebRTC-Verbindungen und DataChannel
+
   function callUser(userID) {
     peerRef.current = createPeer(userID);
     userStream.current
@@ -76,12 +82,47 @@ const Room = () => {
       ],
     });
 
+    // Erstellen eines Datenkanals (wenn dies die Seite ist, die den Anruf tätigt)
+    const dataChannel = peer.createDataChannel("yourChannelName");
+    dataChannelRef.current = dataChannel;
+    dataChannel.onopen = handleDataChannelOpen;
+    dataChannel.onmessage = handleDataChannelMessage;
+
     // Ereignishandler für Peer-Verbindung
     peer.onicecandidate = handleICECandidateEvent;
     peer.ontrack = handleTrackEvent;
     peer.onnegotiationneeded = () => handleNegotiationNeededEvent(userID);
 
+    // Um auf den Datenkanal auf der anderen Seite zu reagieren:
+    peer.ondatachannel = (event) => {
+      const dataChannel = event.channel;
+      dataChannelRef.current = dataChannel;
+      dataChannel.onmessage = handleDataChannelMessage;
+      dataChannel.onopen = handleDataChannelOpen;
+      // Weitere Ereignishandler hier
+    };
+
     return peer;
+  }
+
+  function handleDataChannelMessage(event) {
+    const message = JSON.parse(event.data);
+    switch (message.action) {
+      case "play":
+        // Stellt sicher, dass das Video am korrekten Zeitpunkt startet
+        localVideoPlayer.current.currentTime = message.currentTime;
+        localVideoPlayer.current.play();
+        break;
+      case "pause":
+        // Stellt sicher, dass das Video am korrekten Zeitpunkt pausiert
+        localVideoPlayer.current.currentTime = message.currentTime;
+        localVideoPlayer.current.pause();
+        break;
+    }
+  }
+
+  function handleDataChannelOpen() {
+    console.log("Datenkanal geöffnet");
   }
 
   // Behandelt das Ereignis, wenn eine Verhandlung erforderlich ist
@@ -156,12 +197,48 @@ const Room = () => {
     partnerVideo.current.srcObject = e.streams[0];
   }
 
+  function playVideo() {
+    const currentTime = localVideoPlayer.current.currentTime;
+    // Lokales Video sofort abspielen
+    localVideoPlayer.current.play();
+    // Steuerbefehl über den Datenkanal senden
+    if (
+      dataChannelRef.current &&
+      dataChannelRef.current.readyState === "open"
+    ) {
+      dataChannelRef.current.send(
+        JSON.stringify({ action: "play", currentTime })
+      );
+    }
+  }
+
+  function stopVideo() {
+    const currentTime = localVideoPlayer.current.currentTime;
+    // Lokales Video sofort anhalten
+    localVideoPlayer.current.pause();
+    // Steuerbefehl über den Datenkanal senden
+    if (
+      dataChannelRef.current &&
+      dataChannelRef.current.readyState === "open"
+    ) {
+      dataChannelRef.current.send(
+        JSON.stringify({ action: "pause", currentTime })
+      );
+    }
+  }
   // Rendert die Videoelemente für Benutzer und Partner
   return (
-    <div>
-      <video autoPlay muted ref={userVideo} />
-      <video autoPlay ref={partnerVideo} />
-    </div>
+    <Container>
+      <LeftRow>
+        <video autoPlay muted ref={userVideo} />
+        <video autoPlay ref={partnerVideo} />
+      </LeftRow>
+      <RightRow>
+        <video controls ref={localVideoPlayer} src={videoSrc} />
+        <button onClick={stopVideo}>Stop Video</button>
+        <button onClick={playVideo}>Play Video</button>
+      </RightRow>
+    </Container>
   );
 };
 
