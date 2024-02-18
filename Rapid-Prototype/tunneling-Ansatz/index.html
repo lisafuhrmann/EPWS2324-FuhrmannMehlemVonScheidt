@@ -12,10 +12,10 @@
     <script>
         ///const cacheServiceEndpoint = "https://ripe-mangos-super-smell.loca.lt/"
         const currentUrl = window.location.href;
-        const cacheServiceEndpoint = currentUrl.replace("index.html", "");
+        let cacheServiceEndpoint = currentUrl.replace("index.html", "");
         console.log("Cleaned URL:", cacheServiceEndpoint);
 
-        let sessionKey;
+        let sessionKey = '';
         let member;
         let print = Math.random().toString(36).substring(7) + ''; //generiert einen "fingerprint" für den Client
         console.log("Das ist dein Print: " + print);
@@ -24,7 +24,7 @@
         let sessionContextFreshInterval
         let inSession = false
         let messages = []
-        let currentVersion
+        let currentVersion = -1
         let videoMode = true
 
         // Funktion von Lucas Jellema
@@ -54,6 +54,7 @@
         const joinSession = async (sessionToJoinKey) => {
             member = document.getElementById("memberName").value
             sessionKey = sessionToJoinKey
+            new QRCode(document.getElementById("qrcode"), cacheServiceEndpoint + "index.html" + "?sessionKey=" + sessionKey);
             document.getElementById("sessionKey").innerText = sessionKey
             messages.length = 0;
             currentVersion = -1;
@@ -239,7 +240,23 @@
                     removeMember(permissionName)
                 })
             }
-            new QRCode(document.getElementById("qrcode"), cacheServiceEndpoint);
+
+            //const URLsessionKey = currentUrl.replace(cacheServiceEndpoint + "index.html", "");
+            // Funktion um Parameter aus der URL zu erhalten
+            function getUrlParameter(name) {
+                name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+                var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+                var results = regex.exec(window.location.search);
+                return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+            };
+
+            const URLsessionKey = getUrlParameter('sessionKey');
+            console.log('Session Key from URL:', URLsessionKey);
+            document.getElementById("joinSessionKey").value = URLsessionKey;
+
+            const URLindex = currentUrl.indexOf("index.html");
+            cacheServiceEndpoint = currentUrl.substring(0, URLindex);
+
             initializePage();
         }
     </script>
@@ -274,11 +291,13 @@
 
     <div id="mediaContainer">
         <video id="videos" controls>
-            <source src="./src/video/NeverGonnaGiveYouUp.mp4" type="video/mp4" />
+            <source
+                src="https://upload.wikimedia.org/wikipedia/commons/d/d3/Polyphon-_Donau-Walzer_%28Johann_Strauss%29.ogv"
+                type="video/ogg" />
             </p>
         </video>
         <audio id="audios" controls>
-            <source src="./src/audio/HyruleCastle.ogg" type="audio/ogg" />
+            <source src="./src/audio/Bach_Minuet_in_G_Major.ogg" type="audio/ogg" />
         </audio>
     </div>
     <br />
