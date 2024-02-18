@@ -1,7 +1,6 @@
 // Lädt Umgebungsvariablen
 require("dotenv").config();
 
-// Einrichtung des Express- und HTTP-Servers sowie Socket.io für Echtzeitkommunikation
 const express = require("express");
 const http = require("http");
 const socket = require("socket.io");
@@ -15,14 +14,19 @@ const io = socket(server, {
     origin: "*",
     methods: ["GET", "POST"],
   },
+  pingInterval: 10000,
+  pingTimeout: 5000,
 });
 
-// Behandelt neue Verbindungen
+const userRooms = {}; // Zuordnung Benutzer:Raum
+
+// Neue Verbindung
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
 
-  // Verwaltet Raumbeitritte
+  // Beitreten zu einem Raum
   socket.on("join_room", (roomID) => {
+    userRooms[socket.id] = roomID;
     socket.join(roomID);
     console.log(`User with ID: ${socket.id} joined room: ${roomID}`);
 
@@ -44,8 +48,15 @@ io.on("connection", (socket) => {
     io.to(incoming.target).emit("ice-candidate", incoming.candidate)
   );
 
-  // Loggt bei Trennung
-  socket.on("disconnect", () => console.log(`User disconnected: ${socket.id}`));
+  // Bei Trennung
+  socket.on("disconnect", () => {
+    const roomID = userRooms[socket.id];
+    if (roomID) {
+      socket.to(roomID).emit("user_disconnected", socket.id);
+      console.log(`User disconnected: ${socket.id} from room: ${roomID}`);
+      delete userRooms[socket.id];
+    }
+  });
 });
 
 // Startet den Server
