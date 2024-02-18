@@ -1,75 +1,82 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import io from "socket.io-client";
 
-// Einfache Container für Layout-Zwecke
-const Container = ({ children }) => <div>{children}</div>;
-const LeftRow = ({ children }) => <div>{children}</div>;
-const RightRow = ({ children }) => <div>{children}</div>;
+// Layout-Komponenten
+const Container = ({ children }) => (
+  <div
+    style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+  >
+    {children}
+  </div>
+);
+const VideoControls = ({ children }) => (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      gap: "20px",
+      marginTop: "20px",
+    }}
+  >
+    {children}
+  </div>
+);
+const StatusBox = ({ status }) => (
+  <div
+    style={{
+      marginTop: "20px",
+      padding: "10px",
+      border: "1px solid #ccc",
+      borderRadius: "5px",
+    }}
+  >
+    {status}
+  </div>
+);
 
 const Room = () => {
-  const { roomID } = useParams(); //Raum-ID aus URL
-  //Referenzen für DOM-Elemente und Objekte
-  const userVideo = useRef();
-  const partnerVideo = useRef();
+  const { roomID } = useParams();
   const peerRef = useRef();
   const socketRef = useRef();
   const otherUser = useRef();
-  const userStream = useRef();
-  const localVideoPlayer = useRef();
-  const dataChannelRef = useRef(null);
+  const localVideoPlayer = useRef(); // Lokaler Video-Player
+  const dataChannelRef = useRef(null); // WebRTC DataChannel
+  const [userStatus, setUserStatus] = useState("Warte auf Benutzer...");
 
   const videoSrc = "/videos/sample-video.mp4";
 
   useEffect(() => {
-    const setupMedia = async () => {
-      try {
-        // Zugriff auf Kamera/Mikrofon und Einrichtung der Socket-Verbindung
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: true,
-        });
-        userVideo.current.srcObject = stream;
-        userStream.current = stream;
+    // Verbindet zum WebSocket-Server
+    socketRef.current = io.connect("/");
+    socketRef.current.emit("join_room", roomID);
 
-        socketRef.current = io.connect("/");
-        socketRef.current.emit("join_room", roomID); // Beitritt zu einem Raum
-
-        // Ereignishandler für Socket-Kommunikation
-        socketRef.current.on("other_user", (userID) => {
-          callUser(userID);
-          otherUser.current = userID;
-        });
-        socketRef.current.on("user_joined", (userID) => {
-          otherUser.current = userID;
-        });
-        socketRef.current.on("offer", handleReceiveCall);
-        socketRef.current.on("answer", handleAnswer);
-        socketRef.current.on("ice-candidate", handleNewICECandidateMsg);
-      } catch (error) {
-        console.error("Error accessing media devices.", error);
+    // Event-Handler
+    socketRef.current.on("other_user", (userID) => {
+      callUser(userID);
+      otherUser.current = userID;
+      setUserStatus("Benutzer verbunden");
+    });
+    socketRef.current.on("user_joined", (userID) => {
+      otherUser.current = userID;
+      setUserStatus("Benutzer verbunden");
+    });
+    socketRef.current.on("user_disconnected", (userID) => {
+      if (otherUser.current === userID) {
+        setUserStatus("Benutzer getrennt");
+        otherUser.current = null;
       }
-    };
+    });
+    socketRef.current.on("offer", handleReceiveCall);
+    socketRef.current.on("answer", handleAnswer);
+    socketRef.current.on("ice-candidate", handleNewICECandidateMsg);
 
-    setupMedia();
-
-    // Bereinigt Ressourcen bei Komponenten-Unmount
     return () => {
-      userStream.current?.getTracks().forEach((track) => track.stop());
-      socketRef.current?.disconnect();
+      socketRef.current?.disconnect(); // Trennt bei Cleanup
     };
   }, [roomID]);
 
-  // Funktionen zur Verwaltung von WebRTC-Verbindungen und DataChannel
-
-  function callUser(userID) {
-    peerRef.current = createPeer(userID);
-    userStream.current
-      .getTracks()
-      .forEach((track) => peerRef.current.addTrack(track, userStream.current));
-  }
-
-  // Erstellen einer Peer-Verbindung
+  // Funktionen zum Verwalten von WebRTC und WebSocket-Ereignissen
   function createPeer(userID) {
     const peer = new RTCPeerConnection({
       iceServers: [
@@ -82,27 +89,80 @@ const Room = () => {
       ],
     });
 
-    // Erstellen eines Datenkanals (wenn dies die Seite ist, die den Anruf tätigt)
-    const dataChannel = peer.createDataChannel("yourChannelName");
-    dataChannelRef.current = dataChannel;
-    dataChannel.onopen = handleDataChannelOpen;
-    dataChannel.onmessage = handleDataChannelMessage;
-
-    // Ereignishandler für Peer-Verbindung
     peer.onicecandidate = handleICECandidateEvent;
-    peer.ontrack = handleTrackEvent;
     peer.onnegotiationneeded = () => handleNegotiationNeededEvent(userID);
-
-    // Um auf den Datenkanal auf der anderen Seite zu reagieren:
     peer.ondatachannel = (event) => {
-      const dataChannel = event.channel;
-      dataChannelRef.current = dataChannel;
-      dataChannel.onmessage = handleDataChannelMessage;
-      dataChannel.onopen = handleDataChannelOpen;
-      // Weitere Ereignishandler hier
+      dataChannelRef.current = event.channel;
+      dataChannelRef.current.onmessage = handleDataChannelMessage;
+      dataChannelRef.current.onopen = handleDataChannelOpen;
     };
 
     return peer;
+  }
+
+  function callUser(userID) {
+    peerRef.current = createPeer(userID);
+    const dataChannel = peerRef.current.createDataChannel("yourChannelName");
+    dataChannelRef.current = dataChannel;
+    dataChannel.onmessage = handleDataChannelMessage;
+    dataChannel.onopen = handleDataChannelOpen;
+  }
+
+  function handleNegotiationNeededEvent(userID) {
+    peerRef.current
+      .createOffer()
+      .then((offer) => {
+        return peerRef.current.setLocalDescription(offer);
+      })
+      .then(() => {
+        const payload = {
+          target: userID,
+          caller: socketRef.current.id,
+          sdp: peerRef.current.localDescription,
+        };
+        socketRef.current.emit("offer", payload);
+      })
+      .catch((e) => console.error(e));
+  }
+
+  function handleReceiveCall(incoming) {
+    peerRef.current = createPeer();
+    peerRef.current
+      .setRemoteDescription(new RTCSessionDescription(incoming.sdp))
+      .then(() => {
+        return peerRef.current.createAnswer();
+      })
+      .then((answer) => {
+        return peerRef.current.setLocalDescription(answer);
+      })
+      .then(() => {
+        const payload = {
+          target: incoming.caller,
+          caller: socketRef.current.id,
+          sdp: peerRef.current.localDescription,
+        };
+        socketRef.current.emit("answer", payload);
+      });
+  }
+
+  function handleAnswer(message) {
+    const desc = new RTCSessionDescription(message.sdp);
+    peerRef.current.setRemoteDescription(desc).catch((e) => console.error(e));
+  }
+
+  function handleICECandidateEvent(e) {
+    if (e.candidate) {
+      const payload = {
+        target: otherUser.current,
+        candidate: e.candidate,
+      };
+      socketRef.current.emit("ice-candidate", payload);
+    }
+  }
+
+  function handleNewICECandidateMsg(incoming) {
+    const candidate = new RTCIceCandidate(incoming);
+    peerRef.current.addIceCandidate(candidate).catch((e) => console.error(e));
   }
 
   function handleDataChannelMessage(event) {
@@ -125,78 +185,7 @@ const Room = () => {
     console.log("Datenkanal geöffnet");
   }
 
-  // Behandelt das Ereignis, wenn eine Verhandlung erforderlich ist
-  function handleNegotiationNeededEvent(userID) {
-    peerRef.current
-      .createOffer()
-      .then((offer) => {
-        return peerRef.current.setLocalDescription(offer);
-      })
-      .then(() => {
-        const payload = {
-          target: userID,
-          caller: socketRef.current.id,
-          sdp: peerRef.current.localDescription,
-        };
-        socketRef.current.emit("offer", payload);
-      })
-      .catch((e) => console.log(e));
-  }
-
-  // Empfangen eines Anrufs
-  function handleReceiveCall(incoming) {
-    peerRef.current = createPeer();
-    const desc = new RTCSessionDescription(incoming.sdp);
-    peerRef.current
-      .setRemoteDescription(desc)
-      .then(() => {
-        userStream.current
-          .getTracks()
-          .forEach((track) =>
-            peerRef.current.addTrack(track, userStream.current)
-          );
-      })
-      .then(() => {
-        return peerRef.current.createAnswer();
-      })
-      .then((answer) => {
-        return peerRef.current.setLocalDescription(answer);
-      })
-      .then(() => {
-        const payload = {
-          target: incoming.caller,
-          caller: socketRef.current.id,
-          sdp: peerRef.current.localDescription,
-        };
-        socketRef.current.emit("answer", payload);
-      });
-  }
-
-  // Verarbeitet die Antwort des Anrufs
-  function handleAnswer(message) {
-    const desc = new RTCSessionDescription(message.sdp);
-    peerRef.current.setRemoteDescription(desc).catch((e) => console.log(e));
-  }
-
-  // Verarbeitet ICE-Kandidaten-Ereignisse
-  function handleICECandidateEvent(e) {
-    if (e.candidate) {
-      const payload = { target: otherUser.current, candidate: e.candidate };
-      socketRef.current.emit("ice-candidate", payload);
-    }
-  }
-
-  // Verarbeitet neue ICE-Kandidaten-Nachrichten
-  function handleNewICECandidateMsg(incoming) {
-    const candidate = new RTCIceCandidate(incoming);
-    peerRef.current.addIceCandidate(candidate).catch((e) => console.log(e));
-  }
-
-  // Verarbeitet Track-Ereignisse
-  function handleTrackEvent(e) {
-    partnerVideo.current.srcObject = e.streams[0];
-  }
-
+  // Steuerung des Videos
   function playVideo() {
     const currentTime = localVideoPlayer.current.currentTime;
     // Lokales Video sofort abspielen
@@ -226,18 +215,20 @@ const Room = () => {
       );
     }
   }
-  // Rendert die Videoelemente für Benutzer und Partner
+
   return (
     <Container>
-      <LeftRow>
-        <video autoPlay muted ref={userVideo} />
-        <video autoPlay ref={partnerVideo} />
-      </LeftRow>
-      <RightRow>
-        <video controls ref={localVideoPlayer} src={videoSrc} />
-        <button onClick={stopVideo}>Stop Video</button>
+      <video
+        controls
+        ref={localVideoPlayer}
+        src={videoSrc}
+        style={{ maxWidth: "100%", height: "auto" }}
+      />
+      <VideoControls>
         <button onClick={playVideo}>Play Video</button>
-      </RightRow>
+        <button onClick={stopVideo}>Stop Video</button>
+      </VideoControls>
+      <StatusBox status={userStatus} />
     </Container>
   );
 };
