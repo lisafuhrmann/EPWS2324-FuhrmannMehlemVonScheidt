@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Video Sync</title>
+
+    <script src="./public/src/script/qrcode.min.js"></script>
+    <script>
+        const portNumber = 3000
+
+        window.onload = function () {
+            // Function to retrieve the client's IP address via a third-party service
+            async function getIPAddress() {
+                try {
+                    const response = await fetch('https://api.ipify.org?format=json');
+                    const data = await response.json();
+                    return data.ip;
+                } catch (error) {
+                    console.error('Error fetching IP address:', error);
+                    return null;
+                }
+            }
+
+            getIPAddress().then(ip => {
+                if (ip) {
+                    console.log('Client IP address:', ip);
+                    const serverIpAddress = ip;
+                    const QRUrl = "http://" + serverIpAddress + ":" + portNumber
+                    console.log("Das ist der QRCode: " + QRUrl)
+                    new QRCode(document.getElementById("qrcode"), QRUrl);
+                } else {
+                    console.log('Failed to retrieve client IP address.');
+                }
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <video id="videoPlayer" controls>
+        <source src="./public/src/video/Polyphon_Donau-Walzer_Johann_Strauss.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const videoPlayer = document.getElementById('videoPlayer');
+            const socket = io('http://localhost:' + portNumber); // Connect to the server
+
+            // Listen for play event from the server
+            socket.on('play', () => {
+                videoPlayer.play();
+            });
+
+            // Listen for pause event from the server
+            socket.on('pause', () => {
+                videoPlayer.pause();
+            });
+
+            // Event listeners to send play/pause events to the server
+            videoPlayer.addEventListener('play', () => {
+                socket.emit('play');
+            });
+
+            videoPlayer.addEventListener('pause', () => {
+                socket.emit('pause');
+            });
+        });
+    </script>
+
+    <div id="qrcode"></div>
+</body>
+
+</html>
