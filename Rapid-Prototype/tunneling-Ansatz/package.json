@@ -1,6 +1,6 @@
 {
   "name": "tunneling-ansatz",
-  "version": "0.4.0",
+  "version": "1.1.1",
   "description": "Prototyp fuer den Tunneling Ansatz",
   "main": "server.js",
   "scripts": {

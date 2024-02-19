@@ -7,17 +7,25 @@
 
 <head>
     <link rel="stylesheet" href="./src/css/main.css" />
+    <script src="./src/script/video.js" defer></script>
+    <script src="./src/script/qrcode.min.js"></script>
     <script>
-        const cacheServiceEndpoint = "https://ripe-mangos-super-smell.loca.lt/"
+        ///const cacheServiceEndpoint = "https://ripe-mangos-super-smell.loca.lt/"
+        const currentUrl = window.location.href;
+        let cacheServiceEndpoint = currentUrl.replace("index.html", "");
+        console.log("Cleaned URL:", cacheServiceEndpoint);
 
-        let sessionKey;
+        let sessionKey = '';
         let member;
-        let print = Math.random().toString(36).substring(7) + ''; //generiert einen print für den Client
+        let print = Math.random().toString(36).substring(7) + ''; //generiert einen "fingerprint" für den Client
         console.log("Das ist dein Print: " + print);
-        const sessionRefreshIntervalDuration = 4000
+        const sessionRefreshIntervalDuration = 1000
+        const qrCode = document.getElementById("qrcode");
         let sessionContextFreshInterval
         let inSession = false
         let messages = []
+        let currentVersion = -1
+        let videoMode = true
 
         // Funktion von Lucas Jellema
         // macht eine Post Request um eine neue Session zu starten
@@ -46,8 +54,10 @@
         const joinSession = async (sessionToJoinKey) => {
             member = document.getElementById("memberName").value
             sessionKey = sessionToJoinKey
+            new QRCode(document.getElementById("qrcode"), cacheServiceEndpoint + "index.html" + "?sessionKey=" + sessionKey);
             document.getElementById("sessionKey").innerText = sessionKey
             messages.length = 0;
+            currentVersion = -1;
 
             const requestOptions = {
                 headers: { "Content-Type": "application/json" },
@@ -72,6 +82,28 @@
             fetch(cacheServiceEndpoint + "permission" + "?sessionKey=" + sessionKey + "&member=" + memberToGive, requestOptions)
         }
 
+        // Bannt ein Member von der Session
+        const removeMember = async (memberToRemove) => {
+            const requestOptions = {
+                "method": "DELETE",
+                "mode": "cors",
+                "redirect": "follow"
+            };
+
+            fetch(cacheServiceEndpoint + "member" + "?sessionKey=" + sessionKey + "&member=" + memberToRemove + "&print=" + print, requestOptions)
+        }
+
+        // Entfernt die Rechte eines Members
+        const removePermission = async (memberToRemove) => {
+            const requestOptions = {
+                "method": "DELETE",
+                "mode": "cors",
+                "redirect": "follow"
+            };
+
+            fetch(cacheServiceEndpoint + "permission" + "?sessionKey=" + sessionKey + "&member=" + memberToRemove + "&print=" + print, requestOptions)
+        }
+
         // Funktion von Lucas Jellema
         // Macht eine Get Request um die Daten der Session zu erhalten
         const retrieveSessionContext = async () => {
@@ -81,7 +113,7 @@
                 "redirect": "follow"
             };
 
-            fetch(cacheServiceEndpoint + "?sessionKey=" + sessionKey, requestOptions)
+            fetch(cacheServiceEndpoint + "?sessionKey=" + sessionKey + "&print=" + print, requestOptions)
                 .then(response => response.json())
                 .then(result => processSessionContext(result))
                 .catch(error => console.log('error', error));
@@ -99,7 +131,7 @@
             };
             console.log("PUT Request: " + requestOptions)
 
-            fetch(cacheServiceEndpoint + "?sessionKey=" + sessionKey, requestOptions)
+            fetch(cacheServiceEndpoint + "?sessionKey=" + sessionKey + "&print=" + print, requestOptions)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok: ' + response.statusText);
@@ -121,19 +153,63 @@
             fetch(cacheServiceEndpoint + "?sessionKey=" + sessionKey + "&print=" + print, requestOptions)
         }
 
-        // Funktion von Lucas Jellema
+        // Urfunktion von Lucas Jellema
         // Verarbeitet die erhaltenen Daten der Session (hier um sie anzuzeigen)
         const processSessionContext = (sessionContext) => {
             const messagesTextarea = document.getElementById("messages")
             const memberTextarea = document.getElementById("members")
-            console.log("Das hab ich bekommen: " + JSON.stringify(sessionContext))
-            console.log("Das sagen die Leute: " + sessionContext.body.value)
-            console.log("Das sind die Meber: " + sessionContext.memberBody.value)
-            messages = sessionContext.body.value.messages
+            ///console.log("Das hab ich bekommen: " + JSON.stringify(sessionContext))
+            ///console.log("Das sagen die Leute: " + sessionContext.body.value)
+            ///console.log("Das sind die Meber: " + sessionContext.memberBody.value)
+            contextMessages = sessionContext.body.value.messages
+            newVersion = sessionContext.body.version
+
+            if (currentVersion < newVersion) {
+                const newMessages = [];
+                currentVersion = newVersion;
+                for (let i = 0; i < contextMessages.length; i++) { //filtert die alten Nachrichten aus dem Array
+                    if (messages[i] !== contextMessages[i]) {
+                        newMessages.push(contextMessages[i]);
+                    }
+                }
+                console.log("newMessages: " + newMessages)
+                //messages = newMessages
+                let playtime
+                for (let i = 0; i < newMessages.length; i++) { //arbeitet die Befehle aus dem Array ab
+                    switch (newMessages[i].substring(0, 3)) {
+                        case "a1_":
+                            letsPlay = true;
+                            playtime = newMessages[i].substring(21)
+                            console.log("This is playtime: " + playtime)
+                            video.currentTime = playtime;
+                            video.play()
+                            break;
+                        case "a2_":
+                            letsPause = true;
+                            video.pause()
+                            break;
+                        case "b1_":
+                            letsPlay = true;
+                            playtime = newMessages[i].substring(21)
+                            console.log("This is playtime: " + playtime)
+                            audio.currentTime = playtime;
+                            audio.play()
+                            break;
+                        case "b2_":
+                            letsPause = true;
+                            audio.pause()
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                messages = sessionContext.body.value.messages
+                const messageContent = messages.reduce((sum, message, index) => sum + (index > 0 ? "\n" : "") + message, "")
+                messagesTextarea.value = messageContent
+            }
+
             members = sessionContext.memberBody.value
-            const messageContent = messages.reduce((sum, message, index) => sum + (index > 0 ? "\n" : "") + message, "")
             const memberContent = members.reduce((sum, member, index) => sum + (index > 0 ? "\n" : "") + member, "")
-            messagesTextarea.value = messageContent
             memberTextarea.value = memberContent
         }
 
@@ -155,7 +231,31 @@
                     const permissionName = document.getElementById("permissionName").value
                     addPermission(permissionName)
                 })
+                document.getElementById("removePermission").addEventListener("click", () => {
+                    const permissionName = document.getElementById("permissionName").value
+                    removePermission(permissionName)
+                })
+                document.getElementById("removeMember").addEventListener("click", () => {
+                    const permissionName = document.getElementById("permissionName").value
+                    removeMember(permissionName)
+                })
             }
+
+            //const URLsessionKey = currentUrl.replace(cacheServiceEndpoint + "index.html", "");
+            // Funktion um Parameter aus der URL zu erhalten
+            function getUrlParameter(name) {
+                name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+                var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+                var results = regex.exec(window.location.search);
+                return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+            };
+
+            const URLsessionKey = getUrlParameter('sessionKey');
+            console.log('Session Key from URL:', URLsessionKey);
+            document.getElementById("joinSessionKey").value = URLsessionKey;
+
+            const URLindex = currentUrl.indexOf("index.html");
+            cacheServiceEndpoint = currentUrl.substring(0, URLindex);
 
             initializePage();
         }
@@ -169,12 +269,14 @@
     <label for="memberName">Name für die Session</label>
     <input id="memberName"></input>
     <br />
-    <label for="permissionName">Nutzer dem Rechte gegeben werden sollen</label>
+    <label for="permissionName">Nutzername für konfiguration</label>
     <input id="permissionName"></input>
     <br />
     <input type="button" id="joinSession" value="Join Existing Multi Client Session" />
     <input type="button" id="startSession" value="Start Multi Client Session" />
     <input type="button" id="addPermission" value="Vergebe Rechte" />
+    <input type="button" id="removePermission" value="Entferne Rechte" />
+    <input type="button" id="removeMember" value="Banne Nutzer" />
     <input type="button" id="deleteSession" value="Delete current Session" />
     <h3>Multi Client Session Identifier <p id="sessionKey"></p>
     </h3>
@@ -185,6 +287,20 @@
     <br />
     <textarea id="messages" rows="10" columns="80"></textarea>
     <textarea id="members" rows="10" columns="80"></textarea>
+    <br />
+
+    <div id="mediaContainer">
+        <video id="videos" controls>
+            <source src="./src/video/Polyphon_Donau-Walzer_Johann_Strauss.mp4" type="video/mp4" />
+            </p>
+        </video>
+        <audio id="audios" controls>
+            <source src="./src/audio/Bach_Minuet_in_G_Major.mp3" type="audio/mp3" />
+        </audio>
+    </div>
+    <br />
+
+    <div id="qrcode"></div>
 </body>
 
 </html>

@@ -45,6 +45,7 @@ const writeToCache = (sessionKey, fingerprint, member) => {
     let prints = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.print : [])
     let members = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.memberName : [])
     let perPrints = (cache[sessionKey] != null ? cache[sessionKey].memberPermission.print : [])
+    let bannedPrints = (cache[sessionKey] != null ? cache[sessionKey].bannedMembers.print : [])
     prints.push(fingerprint)
     if (cache[sessionKey] != null ? cache[sessionKey].memberPrint.memberName.includes(member) : false) {
         let suffix = 1;
@@ -55,8 +56,32 @@ const writeToCache = (sessionKey, fingerprint, member) => {
     } else {
         members.push(member);
     }
-    cache[sessionKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints }, timestamp: Date.now(), version: version }
+    cache[sessionKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints }, bannedMembers: { print: bannedPrints }, timestamp: Date.now(), version: version }
     return { timestamp: cache[sessionKey].timestamp, version: cache[sessionKey].version }
+}
+
+// entfernt einen Member aus der Session
+const removeMember = (sessionKey, member) => {
+    let numberOfWrites = cache['_numberOfWrites'] + 1
+    cache['_numberOfWrites'] = numberOfWrites
+    let version = (cache[sessionKey] != null ? cache[sessionKey].version : 0) + 1
+    let prints = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.print : [])
+    let members = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.memberName : [])
+    let perPrints = (cache[sessionKey] != null ? cache[sessionKey].memberPermission.print : [])
+    let bannedPrints = (cache[sessionKey] != null ? cache[sessionKey].bannedMembers.print : [])
+
+    const print = convertToPrint(sessionKey, member)
+    if (cache[sessionKey].memberPrint.print.includes(print)) {
+        if (cache[sessionKey].memberPermission.print.includes(print)) {
+            perPrints.splice(perPrints.indexOf(print), 1);
+        }
+        prints.splice(prints.indexOf(print), 1);
+        members.splice(members.indexOf(member), 1);
+        bannedPrints.push(print)
+        console.log("Banne Member!: " + print)
+    }
+    cache[sessionKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints }, bannedMembers: { print: bannedPrints }, timestamp: Date.now(), version: version }
+    return cache[sessionKey]
 }
 
 // löscht Member eine Session aus dem Cache
@@ -86,11 +111,12 @@ const addPermission = (sessionKey, member) => {
     let prints = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.print : [])
     let members = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.memberName : [])
     let perPrints = (cache[sessionKey] != null ? cache[sessionKey].memberPermission.print : [])
+    let bannedPrints = (cache[sessionKey] != null ? cache[sessionKey].bannedMembers.print : [])
     const print = convertToPrint(sessionKey, member)
     if (!cache[sessionKey].memberPermission.print.includes(print) && print !== "") {
         perPrints.push(print)
         console.log("Gebe Print Rechte!: " + print)
-        cache[sessionKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints }, timestamp: Date.now(), version: version }
+        cache[sessionKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints }, bannedMembers: { print: bannedPrints }, timestamp: Date.now(), version: version }
     }
     return cache[sessionKey]
 }
@@ -103,12 +129,14 @@ const addHost = (sessionKey, hostPrint) => {
     let prints = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.print : [])
     let members = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.memberName : [])
     let perPrints = (cache[sessionKey] != null ? cache[sessionKey].memberPermission.print : [])
+    let bannedPrints = (cache[sessionKey] != null ? cache[sessionKey].bannedMembers.print : [])
     perPrints.push(hostPrint)
     console.log("Gebe Host Rechte!: " + hostPrint)
-    cache[sessionKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints }, timestamp: Date.now(), version: version }
+    cache[sessionKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints }, bannedMembers: { print: bannedPrints }, timestamp: Date.now(), version: version }
     return cache[sessionKey]
 }
 
+//prüft ob ein gegebener print rechte hat und gibt einen entsprechenden Boolean wert zurück
 const hasPermission = (sessionKey, fingerprint) => {
     if (cache[sessionKey]) {
         return cache[sessionKey].memberPrint.print.includes(fingerprint) && cache[sessionKey].memberPermission.print.includes(fingerprint)
@@ -116,12 +144,42 @@ const hasPermission = (sessionKey, fingerprint) => {
     else return false
 }
 
+//prüft ob ein gegebener print rechte hat und gibt einen entsprechenden Boolean wert zurück
+const isBanned = (sessionKey, fingerprint) => {
+    if (cache[sessionKey]) {
+        return cache[sessionKey].bannedMembers.print.includes(fingerprint)
+    }
+    else return false
+}
+
+// entfernt die Rechte eines Members für die Session
+const removePermission = (sessionKey, member) => {
+    let numberOfWrites = cache['_numberOfWrites'] + 1
+    cache['_numberOfWrites'] = numberOfWrites
+    let version = (cache[sessionKey] != null ? cache[sessionKey].version : 0) + 1
+    let prints = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.print : [])
+    let members = (cache[sessionKey] != null ? cache[sessionKey].memberPrint.memberName : [])
+    let perPrints = (cache[sessionKey] != null ? cache[sessionKey].memberPermission.print : [])
+    let bannedPrints = (cache[sessionKey] != null ? cache[sessionKey].bannedMembers.print : [])
+    const print = convertToPrint(sessionKey, member)
+    if (cache[sessionKey].memberPermission.print.includes(print)) {
+        perPrints.splice(perPrints.indexOf(print), 1);
+        console.log("Entferne Print Rechte!: " + print)
+        cache[sessionKey] = { memberPrint: { print: prints, memberName: members }, memberPermission: { print: perPrints }, bannedMembers: { print: bannedPrints }, timestamp: Date.now(), version: version }
+    }
+    return cache[sessionKey]
+}
+
 module.exports = {
     readFromCache: readFromCache,
     writeToCache: writeToCache,
+    removeMember: removeMember,
     deleteSession: deleteSession,
     addPermission: addPermission,
+    addHost: addHost,
     hasPermission: hasPermission,
-    addHost: addHost
+    isBanned: isBanned,
+    removePermission: removePermission
+
     //initializeCache: initializeCache
 }
