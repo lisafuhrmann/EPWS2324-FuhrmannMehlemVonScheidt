@@ -1,0 +1,18 @@
+{
+  "name": "hotspot-ansatz",
+  "version": "0.1.0",
+  "description": "Synchronisiert mehrere Clients per Tunneling in einem lokalen Hotspot Netzwerk",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Niklas Mehlem",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "http": "^0.0.1-security",
+    "path": "^0.12.7",
+    "socket.io": "^4.7.4"
+  }
+}
