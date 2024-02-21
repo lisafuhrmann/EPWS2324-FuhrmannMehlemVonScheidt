@@ -39,10 +39,12 @@ const Room = () => {
   const { roomID } = useParams();
   const peerRef = useRef();
   const socketRef = useRef();
-  const otherUser = useRef();
+  const otherUsers = useRef([]);
   const localVideoPlayer = useRef(); // Lokaler Video-Player
-  const dataChannelRef = useRef(null); // WebRTC DataChannel
+  const dataChannels = useRef({}); // Datenkanäle für jeden Benutzer
   const [userStatus, setUserStatus] = useState("Warte auf Benutzer...");
+  const [roomCreator, setRoomCreator] = useState(null); // Raum-Ersteller
+  const [currentTime, setCurrentTime] = useState(0); // Zustand für die aktuelle Zeit des Videos
 
   const videoSrc = "/videos/sample-video.mp4";
 
@@ -50,21 +52,29 @@ const Room = () => {
     // Verbindet zum WebSocket-Server
     socketRef.current = io.connect("/");
     socketRef.current.emit("join_room", roomID);
+    socketRef.current.on("room_creator", (creatorID) => {
+      // Empfange und setze den Raum-Ersteller
+      setRoomCreator(creatorID);
+    });
 
     // Event-Handler
-    socketRef.current.on("other_user", (userID) => {
-      callUser(userID);
-      otherUser.current = userID;
-      setUserStatus("Benutzer verbunden");
+    socketRef.current.on("users", (users) => {
+      otherUsers.current = users.filter(
+        (user) => user !== socketRef.current.id
+      );
+      setUserStatus(`Benutzer verbunden: ${otherUsers.current.length}`);
+      otherUsers.current.forEach(callUser);
     });
     socketRef.current.on("user_joined", (userID) => {
-      otherUser.current = userID;
-      setUserStatus("Benutzer verbunden");
+      otherUsers.current.push(userID);
+      setUserStatus(`Benutzer verbunden: ${otherUsers.current.length}`);
+      callUser(userID);
     });
     socketRef.current.on("user_disconnected", (userID) => {
-      if (otherUser.current === userID) {
-        setUserStatus("Benutzer getrennt");
-        otherUser.current = null;
+      const index = otherUsers.current.indexOf(userID);
+      if (index !== -1) {
+        otherUsers.current.splice(index, 1);
+        setUserStatus(`Benutzer verbunden: ${otherUsers.current.length}`);
       }
     });
     socketRef.current.on("offer", handleReceiveCall);
@@ -92,18 +102,19 @@ const Room = () => {
     peer.onicecandidate = handleICECandidateEvent;
     peer.onnegotiationneeded = () => handleNegotiationNeededEvent(userID);
     peer.ondatachannel = (event) => {
-      dataChannelRef.current = event.channel;
-      dataChannelRef.current.onmessage = handleDataChannelMessage;
-      dataChannelRef.current.onopen = handleDataChannelOpen;
+      dataChannels.current[userID] = event.channel;
+      dataChannels.current[userID].onmessage = handleDataChannelMessage;
+      dataChannels.current[userID].onopen = handleDataChannelOpen;
     };
 
     return peer;
   }
 
   function callUser(userID) {
+    if (userID === socketRef.current.id) return;
     peerRef.current = createPeer(userID);
     const dataChannel = peerRef.current.createDataChannel("yourChannelName");
-    dataChannelRef.current = dataChannel;
+    dataChannels.current[userID] = dataChannel;
     dataChannel.onmessage = handleDataChannelMessage;
     dataChannel.onopen = handleDataChannelOpen;
   }
@@ -126,7 +137,7 @@ const Room = () => {
   }
 
   function handleReceiveCall(incoming) {
-    peerRef.current = createPeer();
+    peerRef.current = createPeer(incoming.caller);
     peerRef.current
       .setRemoteDescription(new RTCSessionDescription(incoming.sdp))
       .then(() => {
@@ -153,7 +164,7 @@ const Room = () => {
   function handleICECandidateEvent(e) {
     if (e.candidate) {
       const payload = {
-        target: otherUser.current,
+        target: otherUsers.current,
         candidate: e.candidate,
       };
       socketRef.current.emit("ice-candidate", payload);
@@ -190,14 +201,9 @@ const Room = () => {
     const currentTime = localVideoPlayer.current.currentTime;
     // Lokales Video sofort abspielen
     localVideoPlayer.current.play();
-    // Steuerbefehl über den Datenkanal senden
-    if (
-      dataChannelRef.current &&
-      dataChannelRef.current.readyState === "open"
-    ) {
-      dataChannelRef.current.send(
-        JSON.stringify({ action: "play", currentTime })
-      );
+    // Steuerbefehl über den Datenkanal an alle anderen Benutzer senden
+    if (socketRef.current.id === roomCreator) {
+      broadcastVideoAction("play", currentTime);
     }
   }
 
@@ -205,28 +211,45 @@ const Room = () => {
     const currentTime = localVideoPlayer.current.currentTime;
     // Lokales Video sofort anhalten
     localVideoPlayer.current.pause();
-    // Steuerbefehl über den Datenkanal senden
-    if (
-      dataChannelRef.current &&
-      dataChannelRef.current.readyState === "open"
-    ) {
-      dataChannelRef.current.send(
-        JSON.stringify({ action: "pause", currentTime })
-      );
+    // Steuerbefehl über den Datenkanal an alle anderen Benutzer senden
+    if (socketRef.current.id === roomCreator) {
+      broadcastVideoAction("pause", currentTime);
     }
   }
+
+  // Funktion zum Senden von Synchronisierungsnachrichten an alle anderen Benutzer im Raum
+  function broadcastVideoAction(action, currentTime) {
+    const message = JSON.stringify({ action, currentTime });
+    otherUsers.current.forEach((user) => {
+      if (
+        dataChannels.current[user] &&
+        dataChannels.current[user].readyState === "open"
+      ) {
+        dataChannels.current[user].send(message);
+      }
+    });
+  }
+
+  const isRoomCreator =
+    socketRef.current && socketRef.current.id === roomCreator; // Überprüfung, ob der Benutzer der Raum-Ersteller ist
 
   return (
     <Container>
       <video
-        controls
         ref={localVideoPlayer}
         src={videoSrc}
         style={{ maxWidth: "100%", height: "auto" }}
+        controls={isRoomCreator} // Standardsteuerelemente basierend auf dem Raum-Ersteller anzeigen
       />
+
+      {/* Benutzerdefinierte Steuerelemente */}
       <VideoControls>
-        <button onClick={playVideo}>Play Video</button>
-        <button onClick={stopVideo}>Stop Video</button>
+        {isRoomCreator && (
+          <>
+            <button onClick={playVideo}>Play Video</button>
+            <button onClick={stopVideo}>Stop Video</button>
+          </>
+        )}
       </VideoControls>
       <StatusBox status={userStatus} />
     </Container>
