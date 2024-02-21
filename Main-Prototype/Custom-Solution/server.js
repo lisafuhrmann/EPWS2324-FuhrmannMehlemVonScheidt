@@ -37,6 +37,13 @@ io.on("connection", (socket) => {
       socket.emit("other_user", otherUser);
       socket.to(otherUser).emit("user_joined", socket.id);
     }
+
+    // Prüfen, ob dieser Benutzer der erste im Raum ist (Raum-Ersteller)
+    const isFirstUser = [...room].length === 1;
+    if (isFirstUser) {
+      // Der erste Benutzer wird als Raum-Ersteller festgelegt
+      socket.emit("room_creator", socket.id);
+    }
   });
 
   // Weiterleiten von WebRTC-Signalen
