@@ -44,16 +44,9 @@ Eine bessere Übersicht kann man auch [hier](https://miro.com/app/board/uXjVNaGB
 
 [Development Dokumentation](https://little-cashew-cf8.notion.site/Development-Dokumentation-30b439ae92bc4f7cb817bca335e9f40c)
 
-## Präsentation für das 3. Audit
+## Präsentation für das 4. Audit
 
-Hier findet ihr unsere Präsentation für das 3. Audit: [PDF](/Audits/Audit3.pdf)
+Hier findet ihr unsere Präsentation für das 4. Audit: [PDF](/Audits/Audit4.pdf)
 
-#### Weitere Artefakte & Themen für Audit 4
-
-- Iterierte Versionen bestehender Artefakte​
-- Erweiterung der Webdienste/Technologien
-- durchgeführte PoCs​
-- Ausgefüllte Bewertungsmatrizen und Fazit
-- Main Prototypes
-- Gesamtfazit und Prozessassessment zum Projekt
-- Poster
+## Poster
+Hier findet ihr unser Poster für den Posterslam: [PDF](/Audits/Audit_4/Poster_Entwicklungsprojekt_202324_WebDev_Fuhrmann,Mehlem&vonScheidt_Synchronisierung_mehrerer_Clients.pdf)
