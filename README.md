@@ -44,6 +44,8 @@ Eine bessere Übersicht kann man auch [hier](https://miro.com/app/board/uXjVNaGB
 
 [Development Dokumentation](https://little-cashew-cf8.notion.site/Development-Dokumentation-30b439ae92bc4f7cb817bca335e9f40c)
 
+[Zeitplan](https://little-cashew-cf8.notion.site/9fcc80540bbe4716ad7e39ac3260abf4?v=fe3e5852b92442b6a921d9c6c002b756)
+
 ## Präsentation für das 4. Audit
 
 Hier findet ihr unsere Präsentation für das 4. Audit: [PDF](/Audits/Audit_4/Audit4.pdf)
