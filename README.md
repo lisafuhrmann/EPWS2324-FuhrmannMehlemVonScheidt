@@ -46,7 +46,22 @@ Eine bessere Übersicht kann man auch [hier](https://miro.com/app/board/uXjVNaGB
 
 ## Präsentation für das 4. Audit
 
-Hier findet ihr unsere Präsentation für das 4. Audit: [PDF](/Audits/Audit4.pdf)
+Hier findet ihr unsere Präsentation für das 4. Audit: [PDF](/Audits/Audit_4/Audit4.pdf)
 
 ## Poster
+
 Hier findet ihr unser Poster für den Posterslam: [PDF](/Audits/Audit_4/Poster_Entwicklungsprojekt_202324_WebDev_Fuhrmann,Mehlem&vonScheidt_Synchronisierung_mehrerer_Clients.pdf)
+
+## Prozessassessment und Fazit
+
+Obwohl der Tunneling-Lösungsansatz in den Bewertungsmatrizen nur leicht hinter dem Custom-Lösungsansatz mit WebRTC liegt sind wir uns im Team einstimmig sicher, dass WebRTC der bessere Ansatz für ein System zur synchronen Medienwiedergabe in einer Gruppe ohne Server ist. Zwar ermöglicht Tunneling Clients sich miteinander zu verbinden und über einen Host der als Server fungiert die synchrone Wiedergabe, allerdings wurde im Verlauf klar, dass Tunneling für diesen Zweck nicht ausgelegt ist.
+Der Ansatz mit WebRTC ist deutlich aufwendiger umzusetzen, jedoch sich wir uns als Team einig, dass sich der Aufwand lohnt und mit weiterer Entwicklung ein robustes System entwickelt werden kann, dass die Anforderungen vollständig erfüllt.
+
+An dieser Stelle sei erwähnt, dass alternative Technologien zwar recherchiert wurden, für ein Testen und Umsetzen aber leider die Zeit fehlte.
+Der interessante der Ansatz der Alternativen ist WebTorrent. Im Vergleich zu unseren umgesetzten Ansätzen wird weder ein Signaling Server, noch ein Tunneling Server benötigt. Allerdings eignet sich WebTorrent wahrscheinlich, ähnlich wie Tunneling, nicht gut zur Echtzeit-Synchronisierung.
+Ein ebenfalls weiterer Ansatz ist die Umsetzung eines HotSpot (mit Tunneling oder UPnP), der den Tunneling-Ansatz dahingehend erweitern könnte, da er keinen Tunneling Server benötigt und alle Geräte in einem gemeinsamen lokalen Netzwerk direkt miteinander verbinden kann.
+Der Vollständigkeitshalber sei auch die Cloud-Lösung nochmal genannt, auch wenn sie aufgrund ihres hohen Aufwands, der Abhängigkeit von einem externen Server und der nicht vorhandenen Garantie für gute Echtzeit-Synchronisation als sehr unattraktiv, wenn nicht als ungeeignet eingestuft werden kann.
+
+Zusammenfassend lässt sich sagen, dass das Projekt seine Ziele erfolgreich erreicht hat, dabei wertvolle Erfahrungen gesammelt wurden und eine solide Basis für die Weiterentwicklung gelegt wurde. Der Ausblick auf zukünftige Schritte umfasst die weitere Optimierung der entwickelten Lösungen und die Adressierung der identifizierten Herausforderungen und Verbesserungspotenziale.
+
+Das gesamte Prozessassessment und Fazit findet ihr [hier](https://little-cashew-cf8.notion.site/Prozessassessment-und-Fazit-3ffc77b69e804096b420ca1e4c7f0969?pvs=4)
